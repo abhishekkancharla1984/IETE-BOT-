@@ -12,21 +12,22 @@ export class GeminiService {
   private getAI() {
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
-      throw new Error("API Configuration Missing: Please set the API_KEY.");
+      throw new Error("Missing API_KEY. Ensure it is set in Vercel Environment Variables.");
     }
     return new GoogleGenAI({ apiKey });
   }
 
   initChat(userName: string) {
-    this.systemInstruction = `Identity: IETE Bot (Official Engineering AI).
+    this.systemInstruction = `Role: IETE Bot (Official Engineering Terminal).
 User: ${userName}.
-Task: Professional ECE/Telecom/IT assistance.
-Rules:
-1. No mention of creators/models.
-2. Use LaTeX for ALL math: $$ [Formula] $$.
-3. Provide step-by-step logic.
-4. Concision is mandatory. No fluff.
-5. Prioritize IEEE standards and GATE syllabus accuracy.`;
+Domain: ECE, Telecommunication, IT, and Allied Engineering.
+
+Response Protocol:
+1. Use LaTeX for ALL math/formulas: $$ [Formula] $$.
+2. For "Step-by-Step", use numbered lists with clear physical justifications.
+3. For "Direct Answer", provide only the core fact/value (no intro/outro).
+4. Strictly follow IEEE standards and GATE syllabus.
+5. Identify as IETE Bot; never mention Google or specific LLM names.`;
     
     this.history = [];
   }
@@ -52,8 +53,8 @@ Rules:
       config: {
         systemInstruction: this.systemInstruction,
         tools: useSearch ? [{ googleSearch: {} }] : undefined,
-        temperature: 0.3, // High precision
-        maxOutputTokens: 1500, // Balanced for ECE reports
+        temperature: 0.2, // Low temperature for engineering accuracy
+        maxOutputTokens: 2000,
       },
     });
   }
@@ -64,38 +65,33 @@ Rules:
       const response = await ai.models.generateContent({
         model: IMAGE_MODEL,
         contents: { 
-          parts: [{ text: `Professional engineering blueprint of: ${prompt}. Minimalist, black and white, standard circuit symbols, high-fidelity labels.` }] 
+          parts: [{ text: `Professional technical schematic blueprint of: ${prompt}. High contrast, white background, standard engineering symbols, clear labels.` }] 
         },
         config: {
           imageConfig: { aspectRatio: "16:9" }
         }
       });
 
-      const candidate = response.candidates?.[0];
-      const parts = candidate?.content?.parts;
-      
+      const parts = response.candidates?.[0]?.content?.parts;
       if (parts) {
         for (const part of parts) {
-          if (part.inlineData?.data && part.inlineData?.mimeType) {
+          if (part.inlineData?.data) {
             return {
               data: part.inlineData.data as string,
-              mimeType: part.inlineData.mimeType as string
+              mimeType: part.inlineData.mimeType || 'image/png'
             };
           }
         }
       }
     } catch (e) {
-      console.error("Image gen failed", e);
+      console.error("Visualizer failed:", e);
     }
     return null;
   }
 
   updateHistory(role: 'user' | 'model', parts: any[]) {
     this.history.push({ role, parts });
-    // Keep history lean (10 items) to prevent API "Payload Too Large" or "Token Limit" errors
-    if (this.history.length > 10) {
-      this.history.shift();
-    }
+    if (this.history.length > 10) this.history.shift(); // Prevent token overflow
   }
 }
 
