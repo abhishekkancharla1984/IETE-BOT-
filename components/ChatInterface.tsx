@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -89,7 +90,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
   const handleActionClick = async (type: ToolkitAction) => {
     if (isLoading || isTyping) return;
     
-    // Check if there is already text in the input box to "link" with the tool
     let context = input.trim();
     
     if (type === 'visualize') {
@@ -98,13 +98,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       return;
     }
 
-    // If tool requires an image and none is selected, trigger file picker
     if ((type === 'extract' || type === 'debug') && !selectedMedia && !context) {
        fileInputRef.current?.click();
        return;
     }
 
-    // If no context exists in the input box, prompt for it
     if (!context && !selectedMedia) {
        context = prompt(`Enter the subject for ${type.toUpperCase()}:`) || "";
        if (!context) return;
@@ -131,7 +129,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       if (imageResult) {
         setMessages(prev => prev.map(msg => 
           msg.id === assistantId 
-            ? { ...msg, content: `Generated technical visualization for **${topic}**.`, image: imageResult } 
+            ? { 
+                ...msg, 
+                content: `Generated technical visualization for **${topic}**.`, 
+                image: {
+                  data: imageResult.data,
+                  mimeType: imageResult.mimeType
+                }
+              } 
             : msg
         ));
       } else {

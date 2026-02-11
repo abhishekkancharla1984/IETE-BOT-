@@ -84,12 +84,15 @@ export class GeminiService {
       }
     });
 
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        return {
-          data: part.inlineData.data,
-          mimeType: part.inlineData.mimeType
-        };
+    const candidates = response.candidates;
+    if (candidates && candidates.length > 0 && candidates[0].content.parts) {
+      for (const part of candidates[0].content.parts) {
+        if (part.inlineData && part.inlineData.data && part.inlineData.mimeType) {
+          return {
+            data: part.inlineData.data as string,
+            mimeType: part.inlineData.mimeType as string
+          };
+        }
       }
     }
     return null;
