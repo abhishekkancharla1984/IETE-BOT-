@@ -1,22 +1,24 @@
-
 import { GoogleGenAI } from "@google/genai";
 
-const MODEL_NAME = 'gemini-3-flash-preview';
+const MODEL_NAME = 'gemini-flash-lite-latest';
 
 export class GeminiService {
-  private ai: GoogleGenAI;
+  private ai: GoogleGenAI | null = null;
   private history: any[] = [];
   private systemInstruction: string = '';
 
   constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    const apiKey = process.env.API_KEY;
+    if (apiKey) {
+      this.ai = new GoogleGenAI({ apiKey });
+    }
   }
 
   initChat(userName: string) {
     this.systemInstruction = `You are IETE Bot, an expert AI Engineering Mentor.
 
     CRITICAL RULE: FORMULA VISIBILITY
-    - NEVER provide mathematical formulas as plain text (e.g., don't write "V = I * R").
+    - NEVER provide mathematical formulas as plain text.
     - ALWAYS use LaTeX block formatting for formulas:
       $$
       [Formula Here]
@@ -35,7 +37,11 @@ export class GeminiService {
 
   async sendMessageStream(message: string, mediaData?: { data: string; mimeType: string }) {
     if (!process.env.API_KEY) {
-      throw new Error("API_KEY missing. Set it in Vercel Environment Variables.");
+      throw new Error("Missing Gemini API Key. Go to Vercel Project Settings > Environment Variables and add API_KEY.");
+    }
+
+    if (!this.ai) {
+      this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     }
 
     const userParts: any[] = [{ text: message }];

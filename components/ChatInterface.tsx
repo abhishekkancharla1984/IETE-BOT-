@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -55,25 +54,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
   const [selectedMedia, setSelectedMedia] = useState<{ data: string; mimeType: string } | null>(null);
   const [activeTool, setActiveTool] = useState<ToolkitAction | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [configError, setConfigError] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const BOT_LOGO = "https://r.jina.ai/i/9e006629906d4e248b1841b52a1b94c4";
 
   useEffect(() => {
-    const hours = new Date().getHours();
-    let greeting = 'Good evening';
-    if (hours < 12) greeting = 'Good morning';
-    else if (hours < 17) greeting = 'Good afternoon';
+    const greetingPrefix = 'Hey';
 
     const initialMessage: Message = {
       id: 'initial',
       role: 'assistant',
-      content: `${greeting}, ${user.name}. I am your IETE AI Assistant. I've updated my neural toolkit for your technical queries. How can I help you today?`,
+      content: `${greetingPrefix}, ${user.name}! I am your IETE AI Assistant. I've updated my neural toolkit for your technical queries. How can I help you today?`,
       timestamp: new Date()
     };
     setMessages([initialMessage]);
     geminiService.initChat(user.name);
+
+    if (!process.env.API_KEY) {
+      setConfigError("Gemini API Key is missing. If you've deployed on Vercel, please add 'API_KEY' to your Environment Variables in project settings.");
+    }
   }, [user.name]);
 
   useEffect(() => {
@@ -161,10 +162,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       const streamResponse = await geminiService.sendMessageStream(text, media);
       
       for await (const chunk of streamResponse) {
-        // Correct access to property .text
         fullContent += chunk.text || "";
-        
-        // Extract search grounding metadata if present in this chunk
         const groundingMetadata = chunk.candidates?.[0]?.groundingMetadata;
         if (groundingMetadata?.groundingChunks) {
           groundingMetadata.groundingChunks.forEach((c: any) => {
@@ -190,7 +188,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       geminiService.updateHistory('user', [{ text }, ...(media ? [{ inlineData: media }] : [])]);
       geminiService.updateHistory('model', [{ text: fullContent }]);
     } catch (error: any) {
-      setMessages(prev => prev.map(msg => msg.id === assistantMessageId ? { ...msg, content: `System Error: ${error.message}` } : msg));
+      const errorMessage = error.message || String(error);
+      let displayError = `System Error: ${errorMessage}`;
+      
+      // Handle Rate Limit (429) specifically
+      if (errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
+        displayError = `### ⚠️ Quota Exceeded (Error 429)\n\nYou have reached your Gemini API rate limit. This happens on the free tier if too many requests are sent in a minute.\n\n**What to do:**\n1. **Wait 60 seconds** and try again.\n2. Enable billing in [Google AI Studio](https://aistudio.google.com/) for higher limits.\n3. Check your quota at [ai.google.dev/rate-limits](https://ai.google.dev/gemini-api/docs/rate-limits).`;
+      }
+
+      setMessages(prev => prev.map(msg => msg.id === assistantMessageId ? { ...msg, content: displayError } : msg));
     } finally {
       setIsLoading(false);
       setActiveTool(null);
@@ -221,6 +227,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
     <div className="flex-1 flex flex-col theme-glass-card rounded-[2rem] overflow-hidden h-[calc(100vh-180px)] relative transition-all duration-300">
       <div className="scan-line"></div>
       
+      {configError && (
+        <div className="absolute top-0 left-0 right-0 z-[60] bg-red-600/90 backdrop-blur-md text-white px-4 py-2 text-[10px] font-bold text-center uppercase tracking-widest border-b border-red-500 shadow-xl animate-in slide-in-from-top duration-300">
+          ⚠️ {configError}
+        </div>
+      )}
+
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 custom-scrollbar chat-blueprint relative z-10">
         <div className="watermark-overlay"></div>
         {messages.map((msg, idx) => {
@@ -243,7 +255,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
                     {msg.role === 'assistant' ? (
                       <>
                         <TypewriterText text={msg.content} isStreaming={isLoading && isLatest} onFinished={() => isLatest && generateSuggestions(msg.content)} />
-                        {/* Render grounding sources if they exist */}
                         {msg.sources && msg.sources.length > 0 && (
                           <div className="mt-4 pt-3 border-t border-[var(--border-color)] animate-in fade-in duration-500">
                             <p className="text-[10px] font-bold uppercase tracking-wider mb-2 opacity-50">Sources & Grounding:</p>
@@ -294,8 +305,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       </div>
 
       <div className="p-4 md:p-6 bg-[var(--header-bg)] border-t border-[var(--border-color)] z-20">
-        
-        {/* Toolkit Matrix */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-3 no-scrollbar">
           {[
             { id: 'solve', label: 'Math Solver', icon: '🧠' },
@@ -325,7 +334,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
           ))}
         </div>
 
-        {/* Action Dock */}
         <form onSubmit={handleSend} className="flex gap-3 max-w-4xl mx-auto items-center">
           <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
           <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isLoading} title="Uplink Media" className="p-4 bg-[var(--input-bg)] rounded-2xl text-[var(--text-secondary)] hover:text-[var(--accent-color)] transition-all flex-shrink-0 border border-[var(--border-color)] shadow-inner">
