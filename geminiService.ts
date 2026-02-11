@@ -1,60 +1,47 @@
 import { GoogleGenAI } from "@google/genai";
 
-const TEXT_MODEL = 'gemini-3-flash-preview';
+const TEXT_MODEL = 'gemini-flash-lite-latest';
 const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export class GeminiService {
-  private ai: GoogleGenAI | null = null;
   private history: any[] = [];
   private systemInstruction: string = '';
 
-  constructor() {
-    const apiKey = process.env.API_KEY;
-    if (apiKey) {
-      this.ai = new GoogleGenAI({ apiKey });
-    }
-  }
+  constructor() {}
 
   private getAI() {
-    if (!this.ai) {
-      if (!process.env.API_KEY) {
-        throw new Error("Missing API Key. Please configure the environment variables.");
-      }
-      this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      throw new Error("API Configuration Missing: Please set the API_KEY.");
     }
-    return this.ai;
+    return new GoogleGenAI({ apiKey });
   }
 
   initChat(userName: string) {
-    this.systemInstruction = `You are IETE Bot, the official Professional Engineering AI for The Institution of Electronics and Telecommunication Engineers.
-
-    STRICT RULES ON IDENTITY:
-    - NEVER mention your model name, version, or creator.
-    - If asked who you are, say: "I am IETE Bot, your professional engineering assistant."
-
-    RESPONSE EFFICIENCY:
-    - Provide accurate, technical, and high-quality engineering responses.
-    - Prioritize clarity and technical depth without unnecessary verbosity. 
-    - For technical queries, include:
-      1. A concise conceptual overview.
-      2. Relevant mathematical formulas in LaTeX: $$ [Formula] $$
-      3. Practical engineering insights or use cases.
-    
-    FORMATTING:
-    - Use Markdown headers (###) for structure.
-    - Use bold text for key terms.
-    - Use code blocks for programming or HDL code.
-
-    Tone: Professional, institutional, and precise. Address the user as ${userName}.`;
+    this.systemInstruction = `Identity: IETE Bot (Official Engineering AI).
+User: ${userName}.
+Task: Professional ECE/Telecom/IT assistance.
+Rules:
+1. No mention of creators/models.
+2. Use LaTeX for ALL math: $$ [Formula] $$.
+3. Provide step-by-step logic.
+4. Concision is mandatory. No fluff.
+5. Prioritize IEEE standards and GATE syllabus accuracy.`;
     
     this.history = [];
   }
 
-  async sendMessageStream(message: string, mediaData?: { data: string; mimeType: string }) {
+  async sendMessageStream(message: string, mediaData?: { data: string; mimeType: string }, useSearch: boolean = false) {
     const ai = this.getAI();
     const userParts: any[] = [{ text: message }];
-    if (mediaData) {
-      userParts.push({ inlineData: { data: mediaData.data, mimeType: mediaData.mimeType } });
+    
+    if (mediaData?.data && mediaData?.mimeType) {
+      userParts.push({ 
+        inlineData: { 
+          data: mediaData.data, 
+          mimeType: mediaData.mimeType 
+        } 
+      });
     }
 
     const contents = [...this.history, { role: 'user', parts: userParts }];
@@ -64,31 +51,32 @@ export class GeminiService {
       contents,
       config: {
         systemInstruction: this.systemInstruction,
-        tools: [{ googleSearch: {} }],
-        temperature: 0.7,
+        tools: useSearch ? [{ googleSearch: {} }] : undefined,
+        temperature: 0.3, // High precision
+        maxOutputTokens: 1500, // Balanced for ECE reports
       },
     });
   }
 
   async generateTechnicalImage(prompt: string) {
     const ai = this.getAI();
-    const enhancedPrompt = `A high-resolution technical engineering schematic of: ${prompt}. 
-    Style: Blueprint, professional labeling, electronics/telecom accuracy.`;
+    try {
+      const response = await ai.models.generateContent({
+        model: IMAGE_MODEL,
+        contents: { 
+          parts: [{ text: `Professional engineering blueprint of: ${prompt}. Minimalist, black and white, standard circuit symbols, high-fidelity labels.` }] 
+        },
+        config: {
+          imageConfig: { aspectRatio: "16:9" }
+        }
+      });
 
-    const response = await ai.models.generateContent({
-      model: IMAGE_MODEL,
-      contents: { parts: [{ text: enhancedPrompt }] },
-      config: {
-        imageConfig: { aspectRatio: "16:9" }
-      }
-    });
-
-    const candidates = response.candidates;
-    if (candidates && candidates.length > 0) {
-      const parts = candidates[0].content?.parts;
+      const candidate = response.candidates?.[0];
+      const parts = candidate?.content?.parts;
+      
       if (parts) {
         for (const part of parts) {
-          if (part.inlineData && part.inlineData.data && part.inlineData.mimeType) {
+          if (part.inlineData?.data && part.inlineData?.mimeType) {
             return {
               data: part.inlineData.data as string,
               mimeType: part.inlineData.mimeType as string
@@ -96,13 +84,18 @@ export class GeminiService {
           }
         }
       }
+    } catch (e) {
+      console.error("Image gen failed", e);
     }
     return null;
   }
 
   updateHistory(role: 'user' | 'model', parts: any[]) {
     this.history.push({ role, parts });
-    if (this.history.length > 20) this.history.shift();
+    // Keep history lean (10 items) to prevent API "Payload Too Large" or "Token Limit" errors
+    if (this.history.length > 10) {
+      this.history.shift();
+    }
   }
 }
 
