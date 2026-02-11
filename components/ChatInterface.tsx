@@ -157,10 +157,35 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
 
     try {
       let fullContent = '';
+      let groundingSources: { title: string; uri: string }[] = [];
       const streamResponse = await geminiService.sendMessageStream(text, media);
+      
       for await (const chunk of streamResponse) {
+        // Correct access to property .text
         fullContent += chunk.text || "";
-        setMessages(prev => prev.map(msg => msg.id === assistantMessageId ? { ...msg, content: fullContent } : msg));
+        
+        // Extract search grounding metadata if present in this chunk
+        const groundingMetadata = chunk.candidates?.[0]?.groundingMetadata;
+        if (groundingMetadata?.groundingChunks) {
+          groundingMetadata.groundingChunks.forEach((c: any) => {
+            if (c.web?.uri && c.web?.title) {
+              const newSource = { title: c.web.title, uri: c.web.uri };
+              if (!groundingSources.some(s => s.uri === newSource.uri)) {
+                groundingSources.push(newSource);
+              }
+            }
+          });
+        }
+
+        setMessages(prev => prev.map(msg => 
+          msg.id === assistantMessageId 
+            ? { 
+                ...msg, 
+                content: fullContent, 
+                sources: groundingSources.length > 0 ? [...groundingSources] : msg.sources 
+              } 
+            : msg
+        ));
       }
       geminiService.updateHistory('user', [{ text }, ...(media ? [{ inlineData: media }] : [])]);
       geminiService.updateHistory('model', [{ text: fullContent }]);
@@ -216,7 +241,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
                     msg.role === 'user' ? 'bg-[var(--accent-color)] text-white rounded-tr-none shadow-blue-500/20' : 'bg-[var(--card-bg)] text-[var(--text-primary)] rounded-tl-none border border-[var(--border-color)]'
                   }`}>
                     {msg.role === 'assistant' ? (
-                      <TypewriterText text={msg.content} isStreaming={isLoading && isLatest} onFinished={() => isLatest && generateSuggestions(msg.content)} />
+                      <>
+                        <TypewriterText text={msg.content} isStreaming={isLoading && isLatest} onFinished={() => isLatest && generateSuggestions(msg.content)} />
+                        {/* Render grounding sources if they exist */}
+                        {msg.sources && msg.sources.length > 0 && (
+                          <div className="mt-4 pt-3 border-t border-[var(--border-color)] animate-in fade-in duration-500">
+                            <p className="text-[10px] font-bold uppercase tracking-wider mb-2 opacity-50">Sources & Grounding:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {msg.sources.map((s, i) => (
+                                <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="text-[10px] bg-black/5 hover:bg-black/10 px-2 py-1 rounded border border-black/5 flex items-center gap-1 transition-colors no-underline">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" strokeWidth={2} /></svg>
+                                  {s.title}
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <div className="whitespace-pre-wrap text-[14px] font-medium">{msg.content}</div>
                     )}
@@ -257,17 +298,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         {/* Toolkit Matrix */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-3 no-scrollbar">
           {[
-            { id: 'solve', label: 'Math Solver', icon: '🧠', color: 'blue' },
-            { id: 'formula', label: 'Formulas', icon: 'π', color: 'green' },
-            { id: 'viva', label: 'Viva Prep', icon: '🎤', color: 'indigo' },
-            { id: 'datasheet', label: 'Datasheet', icon: '📋', color: 'blue' },
-            { id: 'code', label: 'Explain Code', icon: '💻', color: 'orange' },
-            { id: 'project', label: 'Project Guru', icon: '🚀', color: 'purple' },
-            { id: 'study', label: 'Study Mode', icon: '📚', color: 'cyan' },
-            { id: 'debug', label: 'Debug', icon: '⚡', color: 'red' },
-            { id: 'extract', label: 'Extract', icon: '📄', color: 'slate' },
-            { id: 'component', label: 'Part ID', icon: '🔍', color: 'amber' },
-            { id: 'pinout', label: 'Pinout', icon: '🔌', color: 'pink' },
+            { id: 'solve', label: 'Math Solver', icon: '🧠' },
+            { id: 'formula', label: 'Formulas', icon: 'π' },
+            { id: 'viva', label: 'Viva Prep', icon: '🎤' },
+            { id: 'datasheet', label: 'Datasheet', icon: '📋' },
+            { id: 'code', label: 'Explain Code', icon: '💻' },
+            { id: 'project', label: 'Project Guru', icon: '🚀' },
+            { id: 'study', label: 'Study Mode', icon: '📚' },
+            { id: 'debug', label: 'Debug', icon: '⚡' },
+            { id: 'extract', label: 'Extract', icon: '📄' },
+            { id: 'component', label: 'Part ID', icon: '🔍' },
+            { id: 'pinout', label: 'Pinout', icon: '🔌' },
           ].map(btn => (
             <button 
               key={btn.id}

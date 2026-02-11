@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -7,14 +6,11 @@
     <title>IETE Bot - AI Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- KaTeX CSS for Formula Rendering -->
+    <!-- KaTeX CSS for professional engineering formulas -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <style>
       :root {
-        /* Base Background Assets */
         --bg-url: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2070');
-        
-        /* Default (Blue) Theme */
         --global-bg: #020617;
         --global-bg-img: linear-gradient(to bottom, rgba(2, 6, 23, 0.85), rgba(2, 6, 23, 0.95)), var(--bg-url);
         --accent-color: #3b82f6;
@@ -59,31 +55,25 @@
       body {
         font-family: 'Inter', sans-serif;
         margin: 0;
-        padding: 0;
         background-color: var(--global-bg);
         color: var(--text-primary);
-        overflow-x: hidden;
-        transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
+        transition: background-color 0.4s ease, color 0.4s ease;
       }
       
       .iete-theme-bg {
-        position: relative;
         min-height: 100vh;
         background-color: var(--global-bg);
         background-image: var(--global-bg-img);
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-        transition: background-image 0.4s ease;
       }
 
       .chat-blueprint {
-        background-color: transparent;
         background-image: 
           linear-gradient(rgba(59, 130, 246, var(--blueprint-opacity)) 1px, transparent 1px),
           linear-gradient(90deg, rgba(59, 130, 246, var(--blueprint-opacity)) 1px, transparent 1px);
         background-size: 30px 30px;
-        position: relative;
       }
 
       .watermark-overlay {
@@ -91,24 +81,15 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 350px;
-        height: 350px;
+        width: 300px;
+        height: 300px;
         opacity: 0.03;
         pointer-events: none;
         background-image: url('https://upload.wikimedia.org/wikipedia/en/2/2a/IETE_Logo.png');
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center;
-        z-index: 0;
         filter: var(--watermark-filter);
-      }
-
-      .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: var(--accent-color);
-        opacity: 0.3;
-        border-radius: 10px;
       }
 
       .theme-glass-card {
@@ -116,79 +97,39 @@
         backdrop-filter: blur(24px);
         border: 1px solid var(--border-color);
         box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
-        transition: background 0.4s ease, border 0.4s ease;
       }
 
-      .markdown-body { font-size: 14px; line-height: 1.6; color: inherit; }
-      .markdown-body p { margin-bottom: 12px; }
-      .markdown-body code { background: rgba(128,128,128,0.15); padding: 2px 4px; border-radius: 4px; font-family: monospace; }
-      .markdown-body pre { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 12px 0; border: 1px solid rgba(255,255,255,0.05); }
-      .katex-display { margin: 1em 0; padding: 12px; background: rgba(59, 130, 246, 0.05); border-radius: 8px; border-left: 3px solid var(--accent-color); overflow-x: auto; color: inherit; }
-
-      .markdown-body table {
-        width: 100%;
-        margin: 1.5rem 0;
-        border-collapse: separate;
-        border-spacing: 0;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid var(--border-color);
-        background: rgba(0, 0, 0, 0.03);
+      /* Mathematical Typesetting Styles */
+      .markdown-body { font-size: 14px; line-height: 1.6; }
+      .katex-display { 
+        margin: 1.5em 0; 
+        padding: 1.2em; 
+        background: rgba(59, 130, 246, 0.05); 
+        border-radius: 12px; 
+        border-left: 4px solid var(--accent-color);
+        overflow-x: auto;
       }
-      .markdown-body thead {
-        background: rgba(59, 130, 246, 0.1);
-        color: var(--accent-color);
-        font-weight: 800;
-        text-transform: uppercase;
-        font-size: 11px;
-        letter-spacing: 0.05em;
-      }
-      .markdown-body th, .markdown-body td {
-        padding: 12px 16px;
-        text-align: left;
-        border-bottom: 1px solid var(--border-color);
-        color: inherit;
-      }
-      .markdown-body tr:last-child td { border-bottom: none; }
-      .markdown-body tbody tr:nth-child(even) { background: rgba(128, 128, 128, 0.02); }
-      .markdown-body tbody tr:hover { background: rgba(59, 130, 246, 0.04); }
-
-      @keyframes scan {
-        from { transform: translateY(-100%); }
-        to { transform: translateY(1000%); }
-      }
-      .scan-line {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 15%;
-        background: linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.03), transparent);
-        pointer-events: none;
-        z-index: 1;
-        animation: scan 10s linear infinite;
-      }
+      .katex { font-size: 1.1em; }
     </style>
   <script type="importmap">
 {
   "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/",
     "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "rehype-katex": "https://esm.sh/rehype-katex@^7.0.1",
-    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1",
+    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
     "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
-    "remark-math": "https://esm.sh/remark-math@^6.0.0"
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
+    "rehype-katex": "https://esm.sh/rehype-katex@^7.0.1",
+    "remark-math": "https://esm.sh/remark-math@^6.0.0",
+    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1"
   }
 }
 </script>
 </head>
   <body>
     <div id="root"></div>
-    <!-- Entry point for the React application -->
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

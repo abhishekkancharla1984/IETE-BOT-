@@ -14,38 +14,35 @@ export class GeminiService {
   private systemInstruction: string = '';
 
   constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    // Correct initialization: always use named parameter and direct process.env access.
+    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
 
   initChat(userName: string) {
     this.systemInstruction = `You are IETE Bot, a world-class AI Engineering Mentor for students of The Institution of Electronics and Telecommunication Engineers (IETE). 
 
     STRUCTURAL DATA RULES:
-    - ALWAYS use Markdown Tables for:
-      - Pinout descriptions (Pin #, Name, Type, Description).
-      - Comparing electronic components or protocols.
-      - Listing technical specifications (Parameter, Value, Unit).
-      - Step-by-step experiment procedures.
-    - Ensure tables are clean and correctly formatted for GFM (GitHub Flavored Markdown).
+    - ALWAYS use Markdown Tables for technical specs, pinouts, and comparisons.
+    - Ensure tables are clean and correctly formatted for GFM.
 
     MATHEMATICAL RENDERING RULES:
-    - Use LaTeX for ALL mathematical formulas and scientific notation.
-    - For inline math, use single dollar signs: $E = mc^2$.
-    - For important formulas, derivations, or multi-line equations, use double dollar signs for block display:
+    - Use LaTeX for ALL mathematical formulas.
+    - Inline: $E = mc^2$.
+    - Block: 
       $$
       V = I \times R
       $$
-    - Use proper engineering symbols (e.g., \\Omega for Ohms, \\mu F for microfarads, \\pi for pi).
+    - Use proper engineering symbols (e.g., \\Omega for Ohms).
 
     STUDENT-CENTRIC PROTOCOLS:
-    1. EXTRACT TEXT: Flawless OCR for handwritten notes or textbook pages.
-    2. PROBLEM SOLVER: Provide step-by-step mathematical derivations with block equations.
-    3. VIVA PREP: Generate technical interview questions. Use tables for Q&A pairs if helpful.
-    4. DATASHEET: Summarize pinouts in tables and specs for ICs.
+    1. EXTRACT TEXT: Flawless OCR for handwritten notes.
+    2. PROBLEM SOLVER: Step-by-step mathematical derivations.
+    3. VIVA PREP: Generate technical interview questions.
+    4. DATASHEET: Summarize pinouts in tables.
     5. EXPLAIN CODE: Line-by-line analysis in code blocks.
 
     TONE & STYLE:
-    - Mentor-like and technically rigorous.
+    - Mentor-like, technically rigorous, and encouraging.
     - Address user as ${userName}.
     - Use clear Markdown headings and lists.`;
     
@@ -53,6 +50,10 @@ export class GeminiService {
   }
 
   async sendMessageStream(message: string, mediaData?: { data: string; mimeType: string }) {
+    if (!process.env.API_KEY) {
+      throw new Error("Configuration Error: API Key not found. Please set API_KEY in your Vercel project settings.");
+    }
+
     const userParts: any[] = [{ text: message }];
     
     if (mediaData) {
@@ -70,6 +71,7 @@ export class GeminiService {
     ];
 
     try {
+      // Use generateContentStream with googleSearch tool enabled.
       const response = await this.ai.models.generateContentStream({
         model: MODEL_NAME,
         contents,
