@@ -1,12 +1,13 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IETE Bot - AI Assistant</title>
+    <title>IETE Bot - Professional Engineering AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- KaTeX CSS for professional engineering formulas -->
+    <!-- KaTeX CSS for professional formula rendering -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <style>
       :root {
@@ -38,26 +39,12 @@
         --watermark-filter: none;
       }
 
-      [data-theme="dark"] {
-        --global-bg: #000000;
-        --global-bg-img: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), rgba(10, 10, 10, 0.95)), var(--bg-url);
-        --accent-color: #6366f1;
-        --blueprint-opacity: 0.03;
-        --card-bg: rgba(20, 20, 20, 0.95);
-        --text-primary: #f8fafc;
-        --text-secondary: #94a3b8;
-        --border-color: rgba(255, 255, 255, 0.05);
-        --header-bg: rgba(10, 10, 10, 0.92);
-        --input-bg: rgba(30, 30, 30, 0.5);
-        --watermark-filter: brightness(0) invert(1);
-      }
-
       body {
         font-family: 'Inter', sans-serif;
         margin: 0;
         background-color: var(--global-bg);
         color: var(--text-primary);
-        transition: background-color 0.4s ease, color 0.4s ease;
+        overflow-x: hidden;
       }
       
       .iete-theme-bg {
@@ -76,22 +63,6 @@
         background-size: 30px 30px;
       }
 
-      .watermark-overlay {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 300px;
-        height: 300px;
-        opacity: 0.03;
-        pointer-events: none;
-        background-image: url('https://upload.wikimedia.org/wikipedia/en/2/2a/IETE_Logo.png');
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-        filter: var(--watermark-filter);
-      }
-
       .theme-glass-card {
         background: var(--card-bg);
         backdrop-filter: blur(24px);
@@ -99,31 +70,32 @@
         box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
       }
 
-      /* Mathematical Typesetting Styles */
+      /* KaTeX Formula Enhancements */
       .markdown-body { font-size: 14px; line-height: 1.6; }
       .katex-display { 
         margin: 1.5em 0; 
-        padding: 1.2em; 
-        background: rgba(59, 130, 246, 0.05); 
-        border-radius: 12px; 
-        border-left: 4px solid var(--accent-color);
+        padding: 1.5em; 
+        background: rgba(59, 130, 246, 0.08); 
+        border-radius: 16px; 
+        border: 1px solid rgba(59, 130, 246, 0.2);
         overflow-x: auto;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
       }
-      .katex { font-size: 1.1em; }
+      .katex { font-size: 1.15em; color: inherit; }
     </style>
   <script type="importmap">
 {
   "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
     "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
     "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
-    "rehype-katex": "https://esm.sh/rehype-katex@^7.0.1",
     "remark-math": "https://esm.sh/remark-math@^6.0.0",
-    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1"
+    "rehype-katex": "https://esm.sh/rehype-katex@^7.0.1",
+    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
   }
 }
 </script>

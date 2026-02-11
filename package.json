@@ -1,3 +1,4 @@
+
 {
   "name": "iete-bot-ai",
   "private": true,
@@ -15,7 +16,8 @@
     "react-markdown": "^9.0.0",
     "rehype-katex": "^7.0.0",
     "remark-gfm": "^4.0.0",
-    "remark-math": "^6.0.0"
+    "remark-math": "^6.0.0",
+    "katex": "^0.16.8"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
