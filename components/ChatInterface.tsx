@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -127,7 +126,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
     try {
       const imageResult = await geminiService.generateTechnicalImage(topic);
       if (imageResult) {
-        setMessages(prev => prev.map(msg => 
+        setMessages((prev): Message[] => prev.map((msg: Message): Message => 
           msg.id === assistantId 
             ? { 
                 ...msg, 
@@ -143,7 +142,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         throw new Error("Visualization pipeline failed.");
       }
     } catch (e: any) {
-      setMessages(prev => prev.map(msg => msg.id === assistantId ? { ...msg, content: `Error: ${e.message}` } : msg));
+      setMessages((prev): Message[] => prev.map((msg: Message): Message => msg.id === assistantId ? { ...msg, content: `Error: ${e.message}` } : msg));
     } finally {
       setIsLoading(false);
     }
@@ -197,7 +196,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       
       for await (const chunk of stream) {
         fullContent += chunk.text || "";
-        setMessages(prev => prev.map(msg => 
+        setMessages((prev): Message[] => prev.map((msg: Message): Message => 
           msg.id === assistantId ? { 
             ...msg, 
             content: fullContent,
@@ -211,7 +210,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       geminiService.updateHistory('user', [{ text }, ...(media ? [{ inlineData: media }] : [])]);
       geminiService.updateHistory('model', [{ text: fullContent }]);
     } catch (error: any) {
-      setMessages(prev => prev.map(msg => msg.id === assistantId ? { ...msg, content: `Error: ${error.message}` } : msg));
+      setMessages((prev): Message[] => prev.map((msg: Message): Message => msg.id === assistantId ? { ...msg, content: `Error: ${error.message}` } : msg));
     } finally {
       setIsLoading(false);
     }

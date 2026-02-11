@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 
 const TEXT_MODEL = 'gemini-3-flash-preview';
@@ -85,13 +84,16 @@ export class GeminiService {
     });
 
     const candidates = response.candidates;
-    if (candidates && candidates.length > 0 && candidates[0].content.parts) {
-      for (const part of candidates[0].content.parts) {
-        if (part.inlineData && part.inlineData.data && part.inlineData.mimeType) {
-          return {
-            data: part.inlineData.data as string,
-            mimeType: part.inlineData.mimeType as string
-          };
+    if (candidates && candidates.length > 0) {
+      const parts = candidates[0].content?.parts;
+      if (parts) {
+        for (const part of parts) {
+          if (part.inlineData && part.inlineData.data && part.inlineData.mimeType) {
+            return {
+              data: part.inlineData.data as string,
+              mimeType: part.inlineData.mimeType as string
+            };
+          }
         }
       }
     }
