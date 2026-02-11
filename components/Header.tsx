@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ThemeMode } from '../App';
 
@@ -10,6 +9,8 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onReset, showReset, currentTheme, onToggleTheme }) => {
+  const BOT_LOGO = "https://jit.ac.in/assets/uploads/2022/12/IETE-logo.png";
+  
   const getThemeIcon = () => {
     switch(currentTheme) {
       case 'light': return (
@@ -34,9 +35,9 @@ const Header: React.FC<HeaderProps> = ({ onReset, showReset, currentTheme, onTog
     <header className="sticky top-0 z-50 w-full border-b border-black/10 bg-[var(--header-bg)] backdrop-blur-xl transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md overflow-hidden p-0.5 border border-black/10">
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md overflow-hidden p-0.5 border border-black/10">
              <img 
-              src="https://r.jina.ai/i/9e006629906d4e248b1841b52a1b94c4" 
+              src={BOT_LOGO} 
               alt="IETE Logo" 
               className="w-full h-full object-contain" 
             />
@@ -45,7 +46,7 @@ const Header: React.FC<HeaderProps> = ({ onReset, showReset, currentTheme, onTog
             <h1 className="text-lg font-bold leading-tight text-[var(--text-primary)]">IETE Bot</h1>
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-              <p className="text-[10px] opacity-60 font-medium uppercase tracking-wider text-[var(--text-secondary)]">Neural Link Active</p>
+              <p className="text-[10px] opacity-60 font-medium uppercase tracking-wider text-[var(--text-secondary)]">Institutional Link Active</p>
             </div>
           </div>
         </div>

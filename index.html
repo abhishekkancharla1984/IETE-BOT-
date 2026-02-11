@@ -69,6 +69,19 @@
         box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
       }
 
+      /* Typing Cursor Effect */
+      .typing-cursor::after {
+        content: "▊";
+        margin-left: 2px;
+        animation: blink 1s step-end infinite;
+        color: #3b82f6;
+      }
+
+      @keyframes blink {
+        from, to { opacity: 1; }
+        50% { opacity: 0; }
+      }
+
       /* KaTeX Formula Enhancements */
       .markdown-body { font-size: 14px; line-height: 1.6; }
       .katex-display { 

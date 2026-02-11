@@ -9,350 +9,334 @@ import { geminiService } from '../geminiService';
 interface ChatInterfaceProps { user: UserProfile; }
 
 type ToolkitAction = 
-  | 'extract' | 'solve' | 'debug' | 'component' 
-  | 'viva' | 'datasheet' | 'code' | 'formula' 
-  | 'project' | 'study' | 'pinout';
-
-const TypewriterText: React.FC<{ text: string; isStreaming: boolean; onFinished?: () => void }> = ({ text, isStreaming, onFinished }) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const typingSpeed = 10;
-
-  useEffect(() => {
-    if (text.length > currentIndex) {
-      const timeout = setTimeout(() => {
-        const charsToTake = text.length - currentIndex > 50 ? 20 : (text.length - currentIndex > 20 ? 8 : 2);
-        const nextText = text.substring(0, currentIndex + charsToTake);
-        setDisplayedText(nextText);
-        setCurrentIndex(currentIndex + charsToTake);
-      }, typingSpeed);
-      return () => clearTimeout(timeout);
-    } else if (text.length > 0 && !isStreaming && currentIndex >= text.length) {
-      onFinished?.();
-    }
-  }, [text, currentIndex, isStreaming, onFinished]);
-
-  return (
-    <div className="markdown-body">
-      <ReactMarkdown 
-        remarkPlugins={[remarkMath, remarkGfm]} 
-        rehypePlugins={[rehypeKatex]}
-      >
-        {displayedText}
-      </ReactMarkdown>
-      {(isStreaming || (text.length > 0 && displayedText.length < text.length)) && (
-        <span className="inline-block w-2 h-4 ml-1 bg-[var(--accent-color)] animate-pulse align-middle">_</span>
-      )}
-    </div>
-  );
-};
+  | 'extract' | 'solve' | 'debug' | 'visualize' 
+  | 'viva' | 'code' | 'formula' | 'project' | 'pinout'
+  | 'datasheet' | 'simulation' | 'research' | 'examprep' | 'units';
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<{ data: string; mimeType: string } | null>(null);
-  const [activeTool, setActiveTool] = useState<ToolkitAction | null>(null);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [configError, setConfigError] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const BOT_LOGO = "https://r.jina.ai/i/9e006629906d4e248b1841b52a1b94c4";
+  const BOT_LOGO = "https://jit.ac.in/assets/uploads/2022/12/IETE-logo.png";
 
   useEffect(() => {
-    const greetingPrefix = 'Hey';
+    const getGreeting = () => {
+      const hour = new Date().getHours();
+      if (hour >= 5 && hour < 12) return "Good morning";
+      if (hour >= 12 && hour < 17) return "Good afternoon";
+      if (hour >= 17 && hour < 21) return "Good evening";
+      return "Hello";
+    };
 
     const initialMessage: Message = {
       id: 'initial',
       role: 'assistant',
-      content: `${greetingPrefix}, ${user.name}! I am your IETE AI Assistant. I've updated my neural toolkit for your technical queries. How can I help you today?`,
+      content: '', 
       timestamp: new Date()
     };
     setMessages([initialMessage]);
     geminiService.initChat(user.name);
 
     if (!process.env.API_KEY) {
-      setConfigError("Gemini API Key is missing. If you've deployed on Vercel, please add 'API_KEY' to your Environment Variables in project settings.");
+      setConfigError("System Configuration Required: Please set the API_KEY environment variable.");
     }
+
+    const welcomeText = `${getGreeting()}, ${user.name}! I am IETE Bot, your professional engineering assistant.\n\nI am equipped with specialized tools for circuit debugging, formula analysis, and research documentation. How can I assist your engineering work today?`;
+    
+    let currentText = "";
+    const words = welcomeText.split(" ");
+    let i = 0;
+    
+    setIsTyping(true);
+    const interval = setInterval(() => {
+      if (i < words.length) {
+        currentText += (i === 0 ? "" : " ") + words[i];
+        setMessages([{ ...initialMessage, content: currentText }]);
+        i++;
+      } else {
+        clearInterval(interval);
+        setIsTyping(false);
+      }
+    }, 12);
+
+    return () => clearInterval(interval);
   }, [user.name]);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'auto' });
     }
-  }, [messages, isLoading, suggestions]);
+  }, [messages, isLoading, isTyping]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64String = (reader.result as string).split(',')[1];
-        const media = { data: base64String, mimeType: file.type };
-        setSelectedMedia(media);
-        if (activeTool) executeTool(activeTool, media);
+        const base64Data = (reader.result as string).split(',')[1];
+        setSelectedMedia({ data: base64Data, mimeType: file.type });
       };
       reader.readAsDataURL(file);
     }
-    e.target.value = '';
   };
 
-  const handleActionClick = (type: ToolkitAction) => {
-    if (isLoading) return;
-    if (selectedMedia) executeTool(type, selectedMedia);
-    else setActiveTool(type);
-  };
-
-  const executeTool = async (type: ToolkitAction, media: { data: string; mimeType: string }) => {
-    if (isLoading) return;
-    setIsLoading(true);
-    let prompt = "";
-    switch(type) {
-      case 'extract': prompt = "Extract all text and layout precisely from this image."; break;
-      case 'solve': prompt = "Solve the technical engineering problem shown in this image step-by-step. Use block LaTeX for formulas."; break;
-      case 'debug': prompt = "Analyze this circuit/schematic for errors or grounding issues."; break;
-      case 'component': prompt = "Identify this electronic component and provide its key operating specs."; break;
-      case 'viva': prompt = "Generate likely viva questions with answers based on this topic."; break;
-      case 'datasheet': prompt = "Summarize the official datasheet specifications for this component."; break;
-      case 'code': prompt = "Explain this code snippet line-by-line using code blocks."; break;
-      case 'formula': prompt = "Provide all relevant engineering formulas for this topic using LaTeX."; break;
-      case 'project': prompt = "Suggest innovative IETE project ideas for this concept."; break;
-      case 'study': prompt = "Summarize this technical content and provide 3 key flashcards."; break;
-      case 'pinout': prompt = "Provide a detailed pinout diagram and description using LaTeX formatting."; break;
-      default: prompt = "Process this media content.";
-    }
-    setSelectedMedia(null);
-    setActiveTool(null);
-    await processMessage(prompt, media);
-  };
-
-  const generateSuggestions = (lastResponse: string) => {
-    const low = lastResponse.toLowerCase();
-    const options: string[] = [];
-    if (low.includes('formula')) options.push('Solve an example', 'Variable definitions', 'Next Concept');
-    else if (low.includes('viva')) options.push('Harder questions', 'Mock Interview', 'Explain terms');
-    else if (low.includes('code')) options.push('Optimize it', 'Convert to C++', 'Dry run');
-    else if (low.includes('project')) options.push('Component list', 'Block diagram', 'Budgeting');
-    else options.push('Explain simpler', 'See related tools', 'More details');
+  const handleActionClick = async (type: ToolkitAction) => {
+    if (isLoading || isTyping) return;
     
-    setSuggestions(options.slice(0, 3));
+    // Check if there is already text in the input box to "link" with the tool
+    let context = input.trim();
+    
+    if (type === 'visualize') {
+      const topic = context || prompt("Describe the technical diagram you need (e.g., 'Internal architecture of 8085'):");
+      if (topic) await processVisualizer(topic);
+      return;
+    }
+
+    // If tool requires an image and none is selected, trigger file picker
+    if ((type === 'extract' || type === 'debug') && !selectedMedia && !context) {
+       fileInputRef.current?.click();
+       return;
+    }
+
+    // If no context exists in the input box, prompt for it
+    if (!context && !selectedMedia) {
+       context = prompt(`Enter the subject for ${type.toUpperCase()}:`) || "";
+       if (!context) return;
+    }
+
+    executeTool(type, selectedMedia || undefined, context);
+  };
+
+  const processVisualizer = async (topic: string) => {
+    setIsLoading(true);
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: `Requesting high-fidelity technical diagram for: ${topic}`,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, userMessage]);
+
+    const assistantId = (Date.now() + 1).toString();
+    setMessages(prev => [...prev, { id: assistantId, role: 'assistant', content: `Rendering technical visualization...`, timestamp: new Date() }]);
+
+    try {
+      const imageResult = await geminiService.generateTechnicalImage(topic);
+      if (imageResult) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === assistantId 
+            ? { ...msg, content: `Generated technical visualization for **${topic}**.`, image: imageResult } 
+            : msg
+        ));
+      } else {
+        throw new Error("Visualization pipeline failed.");
+      }
+    } catch (e: any) {
+      setMessages(prev => prev.map(msg => msg.id === assistantId ? { ...msg, content: `Error: ${e.message}` } : msg));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const executeTool = async (type: ToolkitAction, media?: { data: string; mimeType: string }, customText?: string) => {
+    let toolPrompt = "";
+    const subject = customText || "";
+
+    switch(type) {
+      case 'extract': toolPrompt = `Perform deep technical data extraction. Identify all components, values, and text from this source: ${subject}`; break;
+      case 'solve': toolPrompt = `Provide a step-by-step mathematical solution for the following engineering problem. Include LaTeX formulas: ${subject}`; break;
+      case 'debug': toolPrompt = `Analyze this circuit/design for potential faults, short circuits, or logical errors. Suggest specific hardware fixes: ${subject}`; break;
+      case 'pinout': toolPrompt = `Provide a detailed pin-functional description and electrical characteristics for this component: ${subject}`; break;
+      case 'datasheet': toolPrompt = `Synthesize a datasheet summary for: ${subject}. Include typical ratings and standard application circuits.`; break;
+      case 'simulation': toolPrompt = `Generate a simulation script (Python/Matlab/Spice) to model the behavior of: ${subject}`; break;
+      case 'research': toolPrompt = `Act as a research assistant. Provide an IEEE format abstract and outline for: ${subject}`; break;
+      case 'examprep': toolPrompt = `Generate 5 high-difficulty technical MCQs with deep explanations for GATE/IES prep on: ${subject}`; break;
+      case 'formula': toolPrompt = `List all primary governing equations and physical constants associated with: ${subject}`; break;
+      case 'code': toolPrompt = `Develop professional, optimized engineering code/firmware for: ${subject}`; break;
+      case 'viva': toolPrompt = `Conduct a technical viva session. Ask me challenging questions about: ${subject}`; break;
+      case 'units': toolPrompt = `Perform unit conversions and dimensional analysis for: ${subject}`; break;
+      case 'project': toolPrompt = `Create a full engineering project roadmap (BOM, Circuit, Logic) for: ${subject}`; break;
+      default: toolPrompt = `Analyze: ${subject}`;
+    }
+
+    setSelectedMedia(null);
+    setInput('');
+    await processMessage(toolPrompt, media);
   };
 
   const processMessage = async (text: string, media?: { data: string; mimeType: string }) => {
-    if (isLoading && !media) return;
+    if (isLoading || isTyping) return;
     setIsLoading(true);
-    setSuggestions([]);
     
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: text,
       timestamp: new Date(),
-      image: media?.mimeType.startsWith('image/') ? media : undefined
+      image: media
     };
     setMessages(prev => [...prev, userMessage]);
     
-    const assistantMessageId = (Date.now() + 1).toString();
-    setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '', timestamp: new Date() }]);
+    const assistantId = (Date.now() + 1).toString();
+    setMessages(prev => [...prev, { id: assistantId, role: 'assistant', content: '', timestamp: new Date() }]);
 
     try {
       let fullContent = '';
-      let groundingSources: { title: string; uri: string }[] = [];
-      const streamResponse = await geminiService.sendMessageStream(text, media);
+      const stream = await geminiService.sendMessageStream(text, media);
       
-      for await (const chunk of streamResponse) {
+      for await (const chunk of stream) {
         fullContent += chunk.text || "";
-        const groundingMetadata = chunk.candidates?.[0]?.groundingMetadata;
-        if (groundingMetadata?.groundingChunks) {
-          groundingMetadata.groundingChunks.forEach((c: any) => {
-            if (c.web?.uri && c.web?.title) {
-              const newSource = { title: c.web.title, uri: c.web.uri };
-              if (!groundingSources.some(s => s.uri === newSource.uri)) {
-                groundingSources.push(newSource);
-              }
-            }
-          });
-        }
-
         setMessages(prev => prev.map(msg => 
-          msg.id === assistantMessageId 
-            ? { 
-                ...msg, 
-                content: fullContent, 
-                sources: groundingSources.length > 0 ? [...groundingSources] : msg.sources 
-              } 
-            : msg
+          msg.id === assistantId ? { 
+            ...msg, 
+            content: fullContent,
+            sources: chunk.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((c: any) => ({
+                title: c.web?.title || 'Resource',
+                uri: c.web?.uri
+            })).filter((s: any) => s.uri)
+          } : msg
         ));
       }
       geminiService.updateHistory('user', [{ text }, ...(media ? [{ inlineData: media }] : [])]);
       geminiService.updateHistory('model', [{ text: fullContent }]);
     } catch (error: any) {
-      const errorMessage = error.message || String(error);
-      let displayError = `System Error: ${errorMessage}`;
-      
-      // Handle Rate Limit (429) specifically
-      if (errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
-        displayError = `### ⚠️ Quota Exceeded (Error 429)\n\nYou have reached your Gemini API rate limit. This happens on the free tier if too many requests are sent in a minute.\n\n**What to do:**\n1. **Wait 60 seconds** and try again.\n2. Enable billing in [Google AI Studio](https://aistudio.google.com/) for higher limits.\n3. Check your quota at [ai.google.dev/rate-limits](https://ai.google.dev/gemini-api/docs/rate-limits).`;
-      }
-
-      setMessages(prev => prev.map(msg => msg.id === assistantMessageId ? { ...msg, content: displayError } : msg));
+      setMessages(prev => prev.map(msg => msg.id === assistantId ? { ...msg, content: `Error: ${error.message}` } : msg));
     } finally {
       setIsLoading(false);
-      setActiveTool(null);
     }
-  };
-
-  const handleSuggestionClick = (opt: string) => {
-    if (isLoading) return;
-    processMessage(opt);
   };
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!input.trim() && !selectedMedia) || isLoading) return;
-    const txt = input;
-    const med = selectedMedia;
+    if ((!input.trim() && !selectedMedia) || isLoading || isTyping) return;
+    const txt = input || (selectedMedia ? "Extract technical data from this image." : "");
+    const media = selectedMedia;
     setInput('');
     setSelectedMedia(null);
-    setActiveTool(null);
-    processMessage(txt || "Analyzing engineering data...", med || undefined);
-  };
-
-  const handleCopy = (content: string) => {
-    navigator.clipboard.writeText(content);
+    processMessage(txt, media || undefined);
   };
 
   return (
-    <div className="flex-1 flex flex-col theme-glass-card rounded-[2rem] overflow-hidden h-[calc(100vh-180px)] relative transition-all duration-300">
-      <div className="scan-line"></div>
+    <div className="flex-1 flex flex-col theme-glass-card rounded-[2rem] overflow-hidden h-[calc(100vh-180px)] relative">
+      {configError && <div className="bg-red-600 text-white text-[10px] py-1 text-center font-bold">{configError}</div>}
       
-      {configError && (
-        <div className="absolute top-0 left-0 right-0 z-[60] bg-red-600/90 backdrop-blur-md text-white px-4 py-2 text-[10px] font-bold text-center uppercase tracking-widest border-b border-red-500 shadow-xl animate-in slide-in-from-top duration-300">
-          ⚠️ {configError}
-        </div>
-      )}
-
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 custom-scrollbar chat-blueprint relative z-10">
-        <div className="watermark-overlay"></div>
-        {messages.map((msg, idx) => {
-          const isLatest = idx === messages.length - 1;
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 chat-blueprint relative">
+        <div className="absolute inset-0 bg-blue-500/5 pointer-events-none"></div>
+        {messages.map((msg, index) => {
+          const isLast = index === messages.length - 1;
+          const showCursor = isLast && isTyping && msg.role === 'assistant';
+          
           return (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} group`}>
-              <div className={`max-w-[90%] md:max-w-[85%] flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg border ${msg.role === 'user' ? 'bg-[var(--accent-color)] border-[var(--accent-color)]' : 'bg-white border-black/10'}`}>
-                  {msg.role === 'user' ? <span className="text-white font-black text-xs">{user.name[0]}</span> : <img src={BOT_LOGO} className="w-full h-full object-contain p-1.5" alt="Bot" />}
+            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-200`}>
+              <div className={`flex gap-4 max-w-[90%] md:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center shadow-lg bg-white border border-black/10 overflow-hidden p-0.5">
+                  {msg.role === 'user' ? <span className="font-bold text-blue-900 text-sm">{user.name[0]}</span> : <img src={BOT_LOGO} className="w-full h-full object-contain" alt="IETE" />}
                 </div>
-                <div className={`flex flex-col gap-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                  {msg.image && (
-                    <div className="rounded-2xl overflow-hidden border border-black/10 shadow-lg max-w-sm">
-                      <img src={`data:${msg.image.mimeType};base64,${msg.image.data}`} className="w-full h-auto max-h-60 object-cover" alt="Data" />
-                    </div>
-                  )}
-                  <div className={`rounded-2xl px-5 py-3.5 shadow-md transition-all duration-300 relative ${
-                    msg.role === 'user' ? 'bg-[var(--accent-color)] text-white rounded-tr-none shadow-blue-500/20' : 'bg-[var(--card-bg)] text-[var(--text-primary)] rounded-tl-none border border-[var(--border-color)]'
+                <div className="flex flex-col gap-3">
+                  <div className={`rounded-2xl px-6 py-4 shadow-md border backdrop-blur-sm ${
+                    msg.role === 'user' ? 'bg-blue-900 text-white border-blue-800 rounded-tr-none' : 'bg-[var(--card-bg)] text-[var(--text-primary)] border-[var(--border-color)] rounded-tl-none'
                   }`}>
-                    {msg.role === 'assistant' ? (
-                      <>
-                        <TypewriterText text={msg.content} isStreaming={isLoading && isLatest} onFinished={() => isLatest && generateSuggestions(msg.content)} />
-                        {msg.sources && msg.sources.length > 0 && (
-                          <div className="mt-4 pt-3 border-t border-[var(--border-color)] animate-in fade-in duration-500">
-                            <p className="text-[10px] font-bold uppercase tracking-wider mb-2 opacity-50">Sources & Grounding:</p>
-                            <div className="flex flex-wrap gap-2">
-                              {msg.sources.map((s, i) => (
-                                <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="text-[10px] bg-black/5 hover:bg-black/10 px-2 py-1 rounded border border-black/5 flex items-center gap-1 transition-colors no-underline">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" strokeWidth={2} /></svg>
-                                  {s.title}
-                                </a>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="whitespace-pre-wrap text-[14px] font-medium">{msg.content}</div>
-                    )}
-                    
-                    {msg.content && (
-                      <button 
-                        onClick={() => handleCopy(msg.content)}
-                        className="absolute -right-10 top-2 opacity-0 group-hover:opacity-100 p-2 text-[var(--text-secondary)] hover:text-[var(--accent-color)] transition-all"
-                        title="Copy text"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                      </button>
+                    <div className={`markdown-body prose prose-invert max-w-none ${showCursor ? 'typing-cursor' : ''}`}>
+                      <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
+
+                    {msg.sources && msg.sources.length > 0 && (
+                      <div className="mt-5 pt-4 border-t border-white/10 flex flex-wrap gap-2">
+                        {msg.sources.map((source, idx) => (
+                          <a key={idx} href={source.uri} target="_blank" rel="noopener noreferrer" className="text-[9px] px-2 py-1 rounded bg-blue-500/10 text-blue-400 font-bold truncate max-w-[150px]">
+                            {source.title}
+                          </a>
+                        ))}
+                      </div>
                     )}
                   </div>
+                  {msg.image && (
+                    <div className="rounded-2xl overflow-hidden border border-[var(--border-color)] shadow-xl bg-black/30 p-1">
+                      <img src={`data:${msg.image.mimeType};base64,${msg.image.data}`} className="w-full h-auto rounded-xl max-h-[500px] object-contain bg-white" alt="Output" />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           );
         })}
-
-        {suggestions.length > 0 && !isLoading && (
-          <div className="flex flex-wrap gap-2 justify-start pl-12 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-4">
-            {suggestions.map((opt, i) => (
-              <button
-                key={i}
-                onClick={() => handleSuggestionClick(opt)}
-                className="px-4 py-2 bg-[var(--accent-color)]/10 border border-[var(--accent-color)]/20 text-[var(--accent-color)] text-[11px] font-black uppercase tracking-wider rounded-full hover:bg-[var(--accent-color)] hover:text-white transition-all transform active:scale-95 shadow-sm"
-              >
-                {opt}
-              </button>
-            ))}
+        {isLoading && !isTyping && (
+          <div className="flex justify-start items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-blue-900/10 animate-pulse"></div>
+            <div className="h-4 w-32 bg-blue-900/10 rounded animate-pulse"></div>
           </div>
         )}
       </div>
 
       <div className="p-4 md:p-6 bg-[var(--header-bg)] border-t border-[var(--border-color)] z-20">
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-3 no-scrollbar">
+        {selectedMedia && (
+          <div className="mb-4 flex items-center gap-2">
+            <div className="relative group">
+              <img src={`data:${selectedMedia.mimeType};base64,${selectedMedia.data}`} className="h-16 w-16 rounded-lg object-cover border-2 border-blue-500 shadow-lg" alt="Preview" />
+              <button 
+                onClick={() => setSelectedMedia(null)} 
+                className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 shadow-lg hover:bg-red-700 transition-colors"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">Image Loaded</p>
+          </div>
+        )}
+
+        <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar pb-2">
           {[
-            { id: 'solve', label: 'Math Solver', icon: '🧠' },
-            { id: 'formula', label: 'Formulas', icon: 'π' },
-            { id: 'viva', label: 'Viva Prep', icon: '🎤' },
-            { id: 'datasheet', label: 'Datasheet', icon: '📋' },
-            { id: 'code', label: 'Explain Code', icon: '💻' },
-            { id: 'project', label: 'Project Guru', icon: '🚀' },
-            { id: 'study', label: 'Study Mode', icon: '📚' },
-            { id: 'debug', label: 'Debug', icon: '⚡' },
-            { id: 'extract', label: 'Extract', icon: '📄' },
-            { id: 'component', label: 'Part ID', icon: '🔍' },
+            { id: 'extract', label: 'Extract', icon: '🔍' },
+            { id: 'debug', label: 'Circuit Debug', icon: '🛠️' },
+            { id: 'visualize', label: 'Diagram', icon: '🎨' },
+            { id: 'solve', label: 'Solve', icon: '🧠' },
+            { id: 'formula', label: 'Equations', icon: 'π' },
+            { id: 'datasheet', label: 'Datasheet', icon: '📑' },
+            { id: 'simulation', label: 'Simulate', icon: '🧪' },
+            { id: 'examprep', label: 'GATE Prep', icon: '📚' },
+            { id: 'research', label: 'Research', icon: '📝' },
+            { id: 'code', label: 'Code', icon: '💻' },
             { id: 'pinout', label: 'Pinout', icon: '🔌' },
-          ].map(btn => (
+          ].map(tool => (
             <button 
-              key={btn.id}
-              onClick={() => handleActionClick(btn.id as ToolkitAction)}
-              disabled={isLoading}
-              className={`flex items-center gap-2 px-4 py-3 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-sm active:scale-95 ${
-                activeTool === btn.id 
-                  ? 'bg-[var(--accent-color)] text-white border-[var(--accent-color)]' 
-                  : 'bg-[var(--input-bg)] border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-black/10'
-              }`}
+              key={tool.id} 
+              onClick={() => handleActionClick(tool.id as ToolkitAction)}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)] text-[10px] font-black uppercase tracking-wider hover:bg-blue-900/10 hover:border-blue-500/50 transition-all disabled:opacity-50 whitespace-nowrap active:scale-95 shadow-sm"
+              disabled={isLoading || isTyping}
             >
-              <span className="text-base">{btn.icon}</span> {btn.label}
+              <span>{tool.icon}</span> {tool.label}
             </button>
           ))}
         </div>
 
-        <form onSubmit={handleSend} className="flex gap-3 max-w-4xl mx-auto items-center">
-          <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-          <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isLoading} title="Uplink Media" className="p-4 bg-[var(--input-bg)] rounded-2xl text-[var(--text-secondary)] hover:text-[var(--accent-color)] transition-all flex-shrink-0 border border-[var(--border-color)] shadow-inner">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" strokeWidth={2} /></svg>
+        <form onSubmit={handleSend} className="flex gap-2 max-w-5xl mx-auto">
+          <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+          <button 
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-3.5 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-blue-500 disabled:opacity-50 transition-colors shadow-inner"
+            disabled={isLoading || isTyping}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
           </button>
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={activeTool ? `Mode: ${activeTool.toUpperCase()}. Add context...` : "Type engineering query..."}
-            disabled={isLoading}
-            className="flex-1 px-5 py-4 rounded-2xl bg-[var(--input-bg)] text-[var(--text-primary)] outline-none text-sm font-semibold placeholder:opacity-40 border border-[var(--border-color)] focus:border-[var(--accent-color)]/50 transition-all shadow-inner"
+            placeholder="Type your query or use the toolkit..."
+            className="flex-1 px-5 py-3.5 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] outline-none focus:border-blue-900/50 text-sm disabled:opacity-50 transition-all shadow-inner"
+            disabled={isLoading || isTyping}
           />
-          <button
-            type="submit"
-            disabled={isLoading || (!input.trim() && !selectedMedia)}
-            className="px-8 py-4 bg-[var(--accent-color)] text-white font-black rounded-2xl uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95 hover:brightness-110 disabled:opacity-30"
-          >
-            {isLoading ? <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> : "Execute"}
+          <button type="submit" disabled={isLoading || isTyping || (!input.trim() && !selectedMedia)} className="px-8 py-3.5 bg-gradient-to-br from-blue-700 to-blue-900 text-white rounded-xl font-black uppercase tracking-[0.2em] text-[10px] hover:brightness-110 transition-all disabled:opacity-30 shadow-lg active:scale-95 min-w-[100px]">
+            {isLoading ? <div className="w-3 h-3 border-2 border-t-transparent border-white rounded-full animate-spin mx-auto" /> : "Transmit"}
           </button>
         </form>
       </div>

@@ -1,6 +1,8 @@
+
 import { GoogleGenAI } from "@google/genai";
 
-const MODEL_NAME = 'gemini-flash-lite-latest';
+const TEXT_MODEL = 'gemini-3-flash-preview';
+const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export class GeminiService {
   private ai: GoogleGenAI | null = null;
@@ -14,36 +16,43 @@ export class GeminiService {
     }
   }
 
+  private getAI() {
+    if (!this.ai) {
+      if (!process.env.API_KEY) {
+        throw new Error("Missing API Key. Please configure the environment variables.");
+      }
+      this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    }
+    return this.ai;
+  }
+
   initChat(userName: string) {
-    this.systemInstruction = `You are IETE Bot, an expert AI Engineering Mentor.
+    this.systemInstruction = `You are IETE Bot, the official Professional Engineering AI for The Institution of Electronics and Telecommunication Engineers.
 
-    CRITICAL RULE: FORMULA VISIBILITY
-    - NEVER provide mathematical formulas as plain text.
-    - ALWAYS use LaTeX block formatting for formulas:
-      $$
-      [Formula Here]
-      $$
-    - Use proper engineering symbols (\\Omega, \\mu F, \\pi, \\Delta).
-    - For inline technical terms like "the value of R", use $R$.
+    STRICT RULES ON IDENTITY:
+    - NEVER mention your model name, version, or creator.
+    - If asked who you are, say: "I am IETE Bot, your professional engineering assistant."
 
-    CORE COMPETENCIES:
-    1. Problem Solver: Solve engineering equations with step-by-step LaTeX derivations.
-    2. Pinout Guru: Use Markdown tables for IC pinouts.
-    3. Code Architect: Use code blocks for C/C++, Python, or Verilog.
-    4. Mentor Tone: Address user as ${userName}. Be technical and encouraging.`;
+    RESPONSE EFFICIENCY:
+    - Provide accurate, technical, and high-quality engineering responses.
+    - Prioritize clarity and technical depth without unnecessary verbosity. 
+    - For technical queries, include:
+      1. A concise conceptual overview.
+      2. Relevant mathematical formulas in LaTeX: $$ [Formula] $$
+      3. Practical engineering insights or use cases.
+    
+    FORMATTING:
+    - Use Markdown headers (###) for structure.
+    - Use bold text for key terms.
+    - Use code blocks for programming or HDL code.
+
+    Tone: Professional, institutional, and precise. Address the user as ${userName}.`;
     
     this.history = [];
   }
 
   async sendMessageStream(message: string, mediaData?: { data: string; mimeType: string }) {
-    if (!process.env.API_KEY) {
-      throw new Error("Missing Gemini API Key. Go to Vercel Project Settings > Environment Variables and add API_KEY.");
-    }
-
-    if (!this.ai) {
-      this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    }
-
+    const ai = this.getAI();
     const userParts: any[] = [{ text: message }];
     if (mediaData) {
       userParts.push({ inlineData: { data: mediaData.data, mimeType: mediaData.mimeType } });
@@ -51,20 +60,44 @@ export class GeminiService {
 
     const contents = [...this.history, { role: 'user', parts: userParts }];
 
-    const response = await this.ai.models.generateContentStream({
-      model: MODEL_NAME,
+    return await ai.models.generateContentStream({
+      model: TEXT_MODEL,
       contents,
       config: {
         systemInstruction: this.systemInstruction,
         tools: [{ googleSearch: {} }],
-        temperature: 0.3, 
+        temperature: 0.7,
       },
     });
-    return response;
+  }
+
+  async generateTechnicalImage(prompt: string) {
+    const ai = this.getAI();
+    const enhancedPrompt = `A high-resolution technical engineering schematic of: ${prompt}. 
+    Style: Blueprint, professional labeling, electronics/telecom accuracy.`;
+
+    const response = await ai.models.generateContent({
+      model: IMAGE_MODEL,
+      contents: { parts: [{ text: enhancedPrompt }] },
+      config: {
+        imageConfig: { aspectRatio: "16:9" }
+      }
+    });
+
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData) {
+        return {
+          data: part.inlineData.data,
+          mimeType: part.inlineData.mimeType
+        };
+      }
+    }
+    return null;
   }
 
   updateHistory(role: 'user' | 'model', parts: any[]) {
     this.history.push({ role, parts });
+    if (this.history.length > 20) this.history.shift();
   }
 }
 
