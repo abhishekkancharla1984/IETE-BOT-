@@ -13,6 +13,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStart }) => {
     e.preventDefault();
     if (name.trim()) {
       setIsEntering(true);
+      // Removed paid API key selection requirement
       onStart(name.trim());
     }
   };
@@ -64,6 +65,10 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStart }) => {
             )}
           </button>
         </form>
+
+        <div className="mt-6 flex flex-col items-center gap-2">
+          <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-widest font-bold">Free Technical Tier Active</p>
+        </div>
       </div>
     </div>
   );
