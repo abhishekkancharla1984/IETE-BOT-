@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IETE Bot - AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #020617;
+      }
+      
+      .iete-theme-bg {
+        position: relative;
+        min-height: 100vh;
+        background-color: #020617;
+        /* Using a more vibrant ECE/Telecom related image */
+        background-image: 
+          linear-gradient(to bottom, rgba(2, 6, 23, 0.8), rgba(2, 6, 23, 0.9)),
+          url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2070');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+      }
+
+      /* Blueprint Pattern for Chat Viewport */
+      .chat-blueprint {
+        background-color: rgba(15, 23, 42, 0.6);
+        background-image: 
+          linear-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
+        background-size: 30px 30px;
+        position: relative;
+      }
+
+      /* IETE Watermark Overlay */
+      .watermark-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 350px;
+        height: 350px;
+        opacity: 0.05;
+        pointer-events: none;
+        background-image: url('https://upload.wikimedia.org/wikipedia/en/2/2a/IETE_Logo.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: brightness(0) invert(1);
+        z-index: 0;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.3);
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(59, 130, 246, 0.5);
+      }
+
+      .dark-glass-card {
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.1);
+      }
+
+      @keyframes scan {
+        from { transform: translateY(-100%); }
+        to { transform: translateY(1000%); }
+      }
+      .scan-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 15%;
+        background: linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.05), transparent);
+        pointer-events: none;
+        z-index: 1;
+        animation: scan 10s linear infinite;
+      }
+
+      .user-bubble-glow {
+        box-shadow: 0 4px 20px rgba(29, 78, 216, 0.4);
+      }
+
+      /* Added Decorative Circuit SVG */
+      .circuit-decoration {
+        position: absolute;
+        opacity: 0.1;
+        pointer-events: none;
+        z-index: -1;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.40.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
