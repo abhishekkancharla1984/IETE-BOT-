@@ -10,7 +10,8 @@ interface ChatInterfaceProps { user: UserProfile; }
 
 type ToolkitAction = 
   | 'extract' | 'debug' | 'visualize' | 'boolean' | 'gate_pyq' 
-  | 'direct' | 'step_by_step' | 'viva' | 'pinout' | 'hdl' | 'project' | 'datasheet' | 'formula_ocr';
+  | 'direct' | 'step_by_step' | 'viva' | 'pinout' | 'hdl' | 'project' | 'datasheet' | 'formula_ocr'
+  | 'text_extract';
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -18,9 +19,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<{ data: string; mimeType: string } | null>(null);
+  const [showUploadOptions, setShowUploadOptions] = useState(false);
+  const [activeAction, setActiveAction] = useState<ToolkitAction | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const uploadMenuRef = useRef<HTMLDivElement>(null);
   
   const BOT_LOGO = "https://jit.ac.in/assets/uploads/2022/12/IETE-logo.png";
   const COLLEGE_LOGO = "https://www.aicjitf.org/wp-content/uploads/2021/12/rec.png";
@@ -64,76 +69,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
     }
   }, [messages, isLoading, isTyping]);
 
-  const handleActionClick = async (type: ToolkitAction) => {
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (uploadMenuRef.current && !uploadMenuRef.current.contains(event.target as Node)) {
+        setShowUploadOptions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleActionClick = (type: ToolkitAction) => {
     if (isLoading || isTyping) return;
     
-    if ((type === 'formula_ocr' || type === 'debug' || type === 'extract') && !selectedMedia) {
-       fileInputRef.current?.click();
-       return;
+    // Toggle action
+    if (activeAction === type) {
+      setActiveAction(null);
+      return;
     }
 
-    let promptSuffix = "";
-    let context = input.trim();
+    setActiveAction(type);
 
-    switch(type) {
-      case 'formula_ocr':
-        promptSuffix = "OCR MODULE: Extract and digitize all technical text and mathematical formulas from the attached image. Use standalone LaTeX blocks for equations.";
-        break;
-      case 'step_by_step': 
-        promptSuffix = "STEP-BY-STEP DERIVATION: Provide a comprehensive stage-by-stage solution for: " + context; 
-        break;
-      case 'direct': 
-        promptSuffix = "DIRECT TECHNICAL FACT: Provide the final result/value only for: " + context; 
-        break;
-      case 'debug': 
-        promptSuffix = "CIRCUIT DIAGNOSTIC: Analyze this visual feed or description for flaws: " + context; 
-        break;
-      case 'extract': 
-        promptSuffix = "PARAMETER EXTRACTION: Tabulate all electrical and physical parameters found in: " + context; 
-        break;
-      case 'boolean': 
-        promptSuffix = "LOGIC SIMPLIFICATION: Provide K-Map and simplified Boolean logic for: " + context; 
-        break;
-      case 'gate_pyq': 
-        promptSuffix = "GATE PYQ SEARCH: Solve a relevant Graduate Aptitude Test in Engineering question for: " + context; 
-        break;
-      case 'pinout':
-        promptSuffix = "IC PINOUT GURU: Provide the standard pinout and functional mapping for: " + context;
-        break;
-      case 'hdl':
-        promptSuffix = "HDL ARCHITECT: Generate optimized Verilog/VHDL code and testbench for: " + context;
-        break;
-      case 'project':
-        promptSuffix = "PROJECT BOT: Generate a full engineering project blueprint for: " + context;
-        break;
-      case 'datasheet':
-        promptSuffix = "DATASHEET RESEARCH: Search and summarize key performance metrics for: " + context;
-        break;
-      case 'viva':
-        promptSuffix = "VIVA PREP: Generate 5 high-level viva questions and answers for: " + context;
-        break;
-      case 'visualize':
-        if (!context) {
-          const topic = prompt("Enter Schematic Topic to Visualize:");
-          if (topic) await processVisualizer(topic);
-          return;
-        }
-        await processVisualizer(context);
-        return;
-      default:
-        promptSuffix = context;
+    // If it's a vision tool and no image is selected, prompt for one
+    if (['formula_ocr', 'debug', 'extract', 'text_extract'].includes(type) && !selectedMedia) {
+       setShowUploadOptions(true);
     }
-
-    if (!context && !selectedMedia) {
-       const userContext = prompt(`Enter ${type.toUpperCase().replace('_', ' ')} query:`) || "";
-       if (!userContext) return;
-       promptSuffix = promptSuffix.replace(context, userContext);
-    }
-
-    const useSearch = ['gate_pyq', 'datasheet', 'pinout'].includes(type);
-    await processMessage(promptSuffix, selectedMedia || undefined, useSearch);
-    setSelectedMedia(null);
-    setInput('');
   };
 
   const processVisualizer = async (topic: string) => {
@@ -158,6 +118,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       setMessages(prev => prev.map((msg: Message): Message => msg.id === assistantId ? { ...msg, content: `Visualization Failure: ${e.message}` } : msg));
     } finally {
       setIsLoading(false);
+      setActiveAction(null);
     }
   };
 
@@ -197,17 +158,51 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       setMessages(prev => prev.map((msg: Message): Message => msg.id === assistantId ? { ...msg, content: `Link Transmission Failure: ${error.message}` } : msg));
     } finally {
       setIsLoading(false);
+      setActiveAction(null);
     }
   };
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!input.trim() && !selectedMedia) || isLoading || isTyping) return;
-    const txt = input;
+    if (isLoading || isTyping) return;
+
+    let textToProcess = input.trim();
     const media = selectedMedia;
+
+    if (activeAction) {
+      if (activeAction === 'visualize') {
+        const topic = textToProcess || prompt("Enter Schematic Topic to Visualize:") || "";
+        if (topic) await processVisualizer(topic);
+        setInput('');
+        setSelectedMedia(null);
+        return;
+      }
+
+      let promptPrefix = "";
+      switch(activeAction) {
+        case 'formula_ocr': promptPrefix = "OCR MODULE: Extract and digitize all technical text and mathematical formulas. Output LaTeX blocks: "; break;
+        case 'text_extract': promptPrefix = "TEXT EXTRACTION: Transcribe all readable text precisely from image: "; break;
+        case 'step_by_step': promptPrefix = "STEP-BY-STEP DERIVATION: Provide stage-by-stage solution for: "; break;
+        case 'direct': promptPrefix = "DIRECT TECHNICAL FACT: Provide final result only for: "; break;
+        case 'debug': promptPrefix = "CIRCUIT DIAGNOSTIC: Analyze visual/description for flaws: "; break;
+        case 'extract': promptPrefix = "PARAMETER EXTRACTION: Tabulate parameters found in: "; break;
+        case 'boolean': promptPrefix = "LOGIC SIMPLIFICATION: Provide K-Map and simplified logic for: "; break;
+        case 'gate_pyq': promptPrefix = "GATE PYQ SEARCH: Solve a relevant GATE question for: "; break;
+        case 'pinout': promptPrefix = "IC PINOUT GURU: Provide standard pinout mapping for: "; break;
+        case 'hdl': promptPrefix = "HDL ARCHITECT: Generate Verilog/VHDL code and testbench for: "; break;
+        case 'project': promptPrefix = "PROJECT BOT: Generate full project blueprint for: "; break;
+        case 'datasheet': promptPrefix = "DATASHEET RESEARCH: Summarize key performance metrics for: "; break;
+        case 'viva': promptPrefix = "VIVA PREP: Generate 5 viva questions/answers for: "; break;
+      }
+      textToProcess = promptPrefix + (textToProcess || "the provided context");
+    }
+
+    if (!textToProcess && !media) return;
+
+    const useSearch = ['gate_pyq', 'datasheet', 'pinout'].includes(activeAction || '');
     setInput('');
     setSelectedMedia(null);
-    processMessage(txt, media || undefined);
+    await processMessage(textToProcess, media || undefined, useSearch);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,6 +216,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       reader.readAsDataURL(file);
     }
     e.target.value = '';
+    setShowUploadOptions(false);
+  };
+
+  const getActionLabel = (action: ToolkitAction) => {
+    switch(action) {
+      case 'formula_ocr': return '📝 OCR MODE';
+      case 'text_extract': return '🔍 EXTRACT MODE';
+      case 'debug': return '🛠️ DEBUG MODE';
+      case 'extract': return '📄 TABLE MODE';
+      case 'visualize': return '🎨 BLUEPRINT MODE';
+      case 'step_by_step': return '🔢 STEP MODE';
+      case 'boolean': return '🧮 LOGIC MODE';
+      case 'hdl': return '💻 HDL MODE';
+      case 'project': return '🏗️ PROJECT MODE';
+      case 'gate_pyq': return '🎓 GATE MODE';
+      case 'datasheet': return '📑 SHEET MODE';
+      case 'pinout': return '📍 PINOUT MODE';
+      case 'viva': return '🎤 VIVA MODE';
+      default: return '';
+    }
   };
 
   return (
@@ -277,35 +292,75 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         ))}
       </div>
 
+      {/* Toolkit Section */}
       <div className="px-3 md:px-6 py-3 md:py-4 bg-black/40 border-t border-white/5 overflow-x-auto no-scrollbar shadow-inner">
         <div className="flex flex-col gap-3 md:gap-4">
           <div className="flex items-center gap-3 md:gap-4 overflow-x-auto no-scrollbar pb-1">
             <div className="flex items-center gap-2">
               <span className="text-[7px] md:text-[8px] font-black bg-blue-600 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">Vision</span>
-              <button onClick={() => handleActionClick('formula_ocr')} className="iete-tool-btn border-blue-500/50 bg-blue-500/10">📝 OCR</button>
-              <button onClick={() => handleActionClick('debug')} className="iete-tool-btn">🛠️ Debug</button>
-              <button onClick={() => handleActionClick('extract')} className="iete-tool-btn">📄 Table</button>
-              <button onClick={() => handleActionClick('visualize')} className="iete-tool-btn">🎨 Blueprint</button>
+              <button onClick={() => handleActionClick('formula_ocr')} className={`iete-tool-btn ${activeAction === 'formula_ocr' ? 'iete-tool-active' : ''}`}>📝 OCR</button>
+              <button onClick={() => handleActionClick('text_extract')} className={`iete-tool-btn ${activeAction === 'text_extract' ? 'iete-tool-active' : ''}`}>🔍 Extract</button>
+              <button onClick={() => handleActionClick('debug')} className={`iete-tool-btn ${activeAction === 'debug' ? 'iete-tool-active' : ''}`}>🛠️ Debug</button>
+              <button onClick={() => handleActionClick('extract')} className={`iete-tool-btn ${activeAction === 'extract' ? 'iete-tool-active' : ''}`}>📄 Table</button>
+              <button onClick={() => handleActionClick('visualize')} className={`iete-tool-btn ${activeAction === 'visualize' ? 'iete-tool-active' : ''}`}>🎨 Blueprint</button>
             </div>
             <div className="flex items-center gap-2 border-l border-white/10 pl-2 md:pl-3">
               <span className="text-[7px] md:text-[8px] font-black bg-emerald-600 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">Logic</span>
-              <button onClick={() => handleActionClick('step_by_step')} className="iete-tool-btn border-emerald-500/50 bg-emerald-500/10">🔢 Step</button>
-              <button onClick={() => handleActionClick('boolean')} className="iete-tool-btn">🧮 Logic</button>
-              <button onClick={() => handleActionClick('hdl')} className="iete-tool-btn">💻 HDL</button>
-              <button onClick={() => handleActionClick('project')} className="iete-tool-btn">🏗️ Project</button>
+              <button onClick={() => handleActionClick('step_by_step')} className={`iete-tool-btn ${activeAction === 'step_by_step' ? 'iete-tool-active' : ''}`}>🔢 Step</button>
+              <button onClick={() => handleActionClick('boolean')} className={`iete-tool-btn ${activeAction === 'boolean' ? 'iete-tool-active' : ''}`}>🧮 Logic</button>
+              <button onClick={() => handleActionClick('hdl')} className={`iete-tool-btn ${activeAction === 'hdl' ? 'iete-tool-active' : ''}`}>💻 HDL</button>
+              <button onClick={() => handleActionClick('project')} className={`iete-tool-btn ${activeAction === 'project' ? 'iete-tool-active' : ''}`}>🏗️ Project</button>
             </div>
             <div className="flex items-center gap-2 border-l border-white/10 pl-2 md:pl-3">
               <span className="text-[7px] md:text-[8px] font-black bg-rose-600 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">Data</span>
-              <button onClick={() => handleActionClick('gate_pyq')} className="iete-tool-btn">🎓 GATE</button>
-              <button onClick={() => handleActionClick('datasheet')} className="iete-tool-btn">📑 Sheets</button>
-              <button onClick={() => handleActionClick('pinout')} className="iete-tool-btn">📍 Pins</button>
-              <button onClick={() => handleActionClick('viva')} className="iete-tool-btn">🎤 Viva</button>
+              <button onClick={() => handleActionClick('gate_pyq')} className={`iete-tool-btn ${activeAction === 'gate_pyq' ? 'iete-tool-active' : ''}`}>🎓 GATE</button>
+              <button onClick={() => handleActionClick('datasheet')} className={`iete-tool-btn ${activeAction === 'datasheet' ? 'iete-tool-active' : ''}`}>📑 Sheets</button>
+              <button onClick={() => handleActionClick('pinout')} className={`iete-tool-btn ${activeAction === 'pinout' ? 'iete-tool-active' : ''}`}>📍 Pins</button>
+              <button onClick={() => handleActionClick('viva')} className={`iete-tool-btn ${activeAction === 'viva' ? 'iete-tool-active' : ''}`}>🎤 Viva</button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-3 md:p-6 bg-[var(--header-bg)] border-t border-[var(--border-color)]">
+      <div className="p-3 md:p-6 bg-[var(--header-bg)] border-t border-[var(--border-color)] relative">
+        {/* Active Action Badge */}
+        {activeAction && (
+          <div className="absolute -top-10 left-6 flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-widest animate-in slide-in-from-bottom-2">
+            {getActionLabel(activeAction)}
+            <button onClick={() => setActiveAction(null)} className="ml-1 opacity-70 hover:opacity-100">✕</button>
+          </div>
+        )}
+
+        {/* Choice Menu for Upload */}
+        {showUploadOptions && (
+          <div ref={uploadMenuRef} className="absolute bottom-24 left-4 md:left-6 bg-[var(--card-bg)] border border-blue-500/30 rounded-2xl shadow-[0_0_30px_rgba(59,130,246,0.3)] p-2 flex flex-col gap-1 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-200 backdrop-blur-3xl min-w-[160px]">
+            <button 
+              onClick={() => {
+                cameraInputRef.current?.click();
+                setShowUploadOptions(false);
+              }}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-blue-500/10 rounded-xl text-[10px] font-black text-blue-400 uppercase tracking-[0.1em] transition-all group"
+            >
+              <div className="bg-blue-500/20 p-2 rounded-lg group-hover:bg-blue-500/30 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              </div>
+              Take Photo
+            </button>
+            <button 
+              onClick={() => {
+                fileInputRef.current?.click();
+                setShowUploadOptions(false);
+              }}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-emerald-500/10 rounded-xl text-[10px] font-black text-emerald-400 uppercase tracking-[0.1em] transition-all group"
+            >
+               <div className="bg-emerald-500/20 p-2 rounded-lg group-hover:bg-emerald-500/30 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+              </div>
+              Browse Files
+            </button>
+          </div>
+        )}
+
         {selectedMedia && (
           <div className="mb-4 flex items-center gap-3 p-3 bg-blue-900/10 rounded-2xl border border-blue-900/30 animate-in slide-in-from-bottom-2">
             <div className="relative group">
@@ -322,37 +377,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         )}
 
         <form onSubmit={handleSend} className="flex gap-2 md:gap-3 w-full max-w-full">
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            className="hidden" 
-            accept="image/*" 
-            onChange={handleFileChange} 
-          />
+          <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+          <input type="file" ref={cameraInputRef} className="hidden" accept="image/*" capture="environment" onChange={handleFileChange} />
 
           <button 
             type="button" 
-            onClick={() => fileInputRef.current?.click()} 
-            title="Upload Image or Take Photo"
-            className="p-3 md:p-5 rounded-xl md:rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-blue-500 transition-all flex-shrink-0 flex items-center justify-center relative overflow-hidden group"
+            onClick={() => setShowUploadOptions(!showUploadOptions)} 
+            className={`p-3 md:p-5 rounded-xl md:rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-secondary)] transition-all flex-shrink-0 flex items-center justify-center relative overflow-hidden group ${showUploadOptions ? 'ring-2 ring-blue-500 border-blue-500/50 text-blue-500' : 'hover:text-blue-500'}`}
           >
             <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <svg className="w-5 h-5 md:w-6 md:h-6 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 11v4m-2-2h4" className="opacity-70" />
             </svg>
           </button>
 
           <input
             type="text" value={input} onChange={(e) => setInput(e.target.value)}
-            placeholder="Transmit technical query..."
+            placeholder={activeAction ? `Provide input for ${activeAction.replace('_', ' ')}...` : "Transmit technical query..."}
             className="flex-1 min-w-0 px-4 md:px-6 py-3 md:py-5 rounded-xl md:rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] outline-none focus:border-blue-900/50 text-xs md:text-sm transition-all shadow-inner"
             disabled={isLoading || isTyping}
           />
           <button 
             type="submit" 
-            disabled={isLoading || isTyping || (!input.trim() && !selectedMedia)} 
+            disabled={isLoading || isTyping || (!input.trim() && !selectedMedia && !activeAction)} 
             className="px-4 md:px-8 py-3 md:py-5 bg-gradient-to-br from-blue-700 to-blue-900 text-white rounded-xl md:rounded-2xl font-black uppercase text-[10px] md:text-[12px] tracking-widest shadow-xl disabled:opacity-30 transition-all flex-shrink-0 active:scale-95"
           >
             {isLoading ? <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> : "SEND"}
@@ -388,6 +436,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
           background: rgba(59, 130, 246, 0.15);
           border-color: rgba(59, 130, 246, 0.4);
           transform: translateY(-1px);
+        }
+        .iete-tool-active {
+          background: rgba(59, 130, 246, 0.3) !important;
+          border-color: rgba(59, 130, 246, 1) !important;
+          box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
