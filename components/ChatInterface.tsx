@@ -16,6 +16,7 @@ type ToolkitAction =
 interface ToolCategory {
   name: string;
   color: string;
+  activeColor: string;
   tools: ToolkitAction[];
 }
 
@@ -38,10 +39,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
   const COLLEGE_LOGO = "https://www.aicjitf.org/wp-content/uploads/2021/12/rec.png";
 
   const categories: ToolCategory[] = [
-    { name: 'Study', color: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-400', tools: ['formulas_only', 'viva', 'gate_pyq', 'step_by_step', 'lab_assistant'] },
-    { name: 'Analysis', color: 'border-blue-500/30 bg-blue-500/5 text-blue-400', tools: ['debug', 'code_explainer', 'boolean', 'extract', 'formula_ocr'] },
-    { name: 'Design', color: 'border-purple-500/30 bg-purple-500/5 text-purple-400', tools: ['visualize', 'hdl', 'project', 'pinout', 'component_finder'] },
-    { name: 'Utility', color: 'border-amber-500/30 bg-amber-500/5 text-amber-400', tools: ['unit_converter', 'datasheet', 'text_extract', 'direct'] }
+    { name: 'Study', color: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-400', activeColor: 'ring-emerald-500 bg-emerald-500/20', tools: ['formulas_only', 'viva', 'gate_pyq', 'step_by_step', 'lab_assistant'] },
+    { name: 'Analysis', color: 'border-blue-500/30 bg-blue-500/5 text-blue-400', activeColor: 'ring-blue-500 bg-blue-500/20', tools: ['debug', 'code_explainer', 'boolean', 'extract', 'formula_ocr'] },
+    { name: 'Design', color: 'border-purple-500/30 bg-purple-500/5 text-purple-400', activeColor: 'ring-purple-500 bg-purple-500/20', tools: ['visualize', 'hdl', 'project', 'pinout', 'component_finder'] },
+    { name: 'Utility', color: 'border-amber-500/30 bg-amber-500/5 text-amber-400', activeColor: 'ring-amber-500 bg-amber-500/20', tools: ['unit_converter', 'datasheet', 'text_extract', 'direct'] }
   ];
 
   useEffect(() => {
@@ -307,7 +308,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         ))}
       </div>
 
-      {/* REORGANIZED CATEGORY TOOLKIT */}
       <div className="px-3 md:px-6 py-3 bg-black/50 border-t border-white/5 overflow-x-auto no-scrollbar">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2 pb-1 border-b border-white/10">
@@ -332,7 +332,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
                     <button 
                       key={tool} 
                       onClick={() => handleActionClick(tool)} 
-                      className={`tool-pill ${activeAction === tool ? 'tool-pill-active' : ''}`}
+                      className={`tool-pill ${activeAction === tool ? `tool-pill-active ${cat.activeColor}` : ''}`}
                     >
                       {getActionLabel(tool)}
                     </button>
@@ -348,9 +348,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         {showUploadOptions && (
           <div ref={uploadMenuRef} className="absolute bottom-24 left-4 md:left-6 bg-[var(--card-bg)] border border-blue-500/30 rounded-2xl shadow-2xl p-2 flex flex-col gap-1 z-[100] animate-in fade-in slide-in-from-bottom-4 backdrop-blur-3xl min-w-[180px]">
             <button onClick={() => { cameraInputRef.current?.click(); setShowUploadOptions(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-blue-500/10 rounded-xl text-[10px] font-black text-blue-400 uppercase transition-all">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               Capture Feed
             </button>
             <button onClick={() => { fileInputRef.current?.click(); setShowUploadOptions(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-emerald-500/10 rounded-xl text-[10px] font-black text-emerald-400 uppercase transition-all">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.414a4 4 0 00-5.656-5.656l-6.415 6.414a6 6 0 108.486 8.486L20.5 13" /></svg>
               Attach File
             </button>
           </div>
@@ -413,7 +415,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
           transition: all 0.2s;
         }
         .tool-pill:hover { background: rgba(255, 255, 255, 0.2); }
-        .tool-pill-active { background: white !important; color: black !important; border-color: white !important; box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
+        .tool-pill-active { 
+          color: white !important; 
+          ring: 2px;
+          border-color: rgba(255, 255, 255, 0.5) !important;
+          box-shadow: 0 0 12px rgba(255, 255, 255, 0.2); 
+          transform: translateY(-1px);
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
