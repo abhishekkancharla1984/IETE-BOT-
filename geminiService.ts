@@ -1,7 +1,8 @@
+
 import { GoogleGenAI } from "@google/genai";
 
-// Using the latest 'gemini-3-flash-preview' for advanced reasoning and up-to-date engineering knowledge
-const TEXT_MODEL = 'gemini-3-flash-preview';
+// Using 'gemini-3-pro-preview' for complex engineering reasoning, advanced math, and STEM tasks as recommended.
+const TEXT_MODEL = 'gemini-3-pro-preview';
 const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export interface SendMessageOptions {
@@ -70,6 +71,7 @@ Formatting Standards:
       tools: options.useSearch ? [{ googleSearch: {} }] : undefined,
     };
 
+    // Correct implementation of generateContentStream following the latest SDK standards.
     return await ai.models.generateContentStream({
       model: TEXT_MODEL,
       contents,
@@ -94,6 +96,7 @@ Formatting Standards:
 
       const parts = response.candidates?.[0]?.content?.parts;
       if (parts) {
+        // Iterate through parts to find the image part as recommended for nano banana series models.
         for (const part of parts) {
           if (part.inlineData?.data) {
             return {
