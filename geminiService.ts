@@ -2,10 +2,10 @@ import { GoogleGenAI } from "@google/genai";
 
 /**
  * MODELS SELECTION:
- * We use 'gemini-3-flash-preview' for ultra-fast latency.
- * Pro models are slower due to complex reasoning; Flash is optimized for speed.
+ * We use 'gemini-flash-lite-latest' for the fastest possible text processing.
+ * Nano banana series for images.
  */
-const TEXT_MODEL = 'gemini-3-flash-preview';
+const TEXT_MODEL = 'gemini-flash-lite-latest';
 const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export interface SendMessageOptions {
@@ -27,18 +27,16 @@ export class GeminiService {
   }
 
   initChat(userName: string) {
-    this.systemInstruction = `Role: IETE Bot.
+    this.systemInstruction = `Role: IETE Bot (Official Terminal).
 Institution: Raghu Engineering College.
 User: ${userName}.
-Capabilities: Expert in Engineering (Electronics, Telecom, IT) AND General Knowledge/Current Affairs.
 
-Response Protocol:
-1. BE FAST AND CONCISE. Users want quick answers.
-2. If "Deep Research" is on, use search for 2024-2025 news/events.
-3. Use LaTeX for math: $$ [Formula] $$.
-4. Balance technical depth with general clarity.
-
-Operational Rule: Respond ONLY to the specific query provided. Do not repeat instructions.`;
+Operational Logic:
+1. SEARCH MODE ON: You are a general-purpose AI with real-time access. Provide up-to-date news, current affairs, and general knowledge. Use the googleSearch tool for EVERY query to ensure the latest 2024-2025 info.
+2. SEARCH MODE OFF: You are a specialized Engineering Assistant. Focus strictly on Electronics, Telecom, IT, VLSI, and Institutional data. Use your internal knowledge.
+3. BE CONCISE. Speed is the priority.
+4. Use LaTeX for math: $$ [Formula] $$.
+5. Identify as "IETE Bot".`;
     
     this.history = [];
   }
@@ -62,15 +60,9 @@ Operational Rule: Respond ONLY to the specific query provided. Do not repeat ins
 
     const contents = [...this.history, { role: 'user', parts: userParts }];
 
-    /**
-     * OPTIMIZATION FOR SPEED:
-     * 1. Use gemini-3-flash-preview.
-     * 2. Set thinkingBudget to 0 to disable thinking-related latency.
-     */
     const config: any = {
       systemInstruction: this.systemInstruction,
       tools: options.useSearch ? [{ googleSearch: {} }] : undefined,
-      thinkingConfig: { thinkingBudget: 0 } 
     };
 
     return await ai.models.generateContentStream({
@@ -86,7 +78,7 @@ Operational Rule: Respond ONLY to the specific query provided. Do not repeat ins
       const response = await ai.models.generateContent({
         model: IMAGE_MODEL,
         contents: { 
-          parts: [{ text: `Professional engineering blueprint/schematic: ${prompt}. IEEE standard symbols, clean technical look.` }] 
+          parts: [{ text: `Professional engineering blueprint/schematic: ${prompt}. IEEE standard symbols, clean look.` }] 
         },
         config: {
           imageConfig: { aspectRatio: "1:1" }
@@ -112,7 +104,7 @@ Operational Rule: Respond ONLY to the specific query provided. Do not repeat ins
 
   updateHistory(role: 'user' | 'model', parts: any[]) {
     this.history.push({ role, parts });
-    if (this.history.length > 10) this.history.shift(); // Keep history lean for speed
+    if (this.history.length > 8) this.history.shift(); 
   }
 }
 
