@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -124,9 +123,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         promptSuffix = context;
     }
 
-    // Fix: Removed redundant type !== 'formula_ocr' and type !== 'visualize' checks.
-    // TypeScript correctly inferred that 'visualize' is already handled by the switch (which returns),
-    // and 'formula_ocr' cannot reach this point if !selectedMedia is true (handled at function start).
     if (!context && !selectedMedia) {
        const userContext = prompt(`Enter ${type.toUpperCase().replace('_', ' ')} query:`) || "";
        if (!userContext) return;
@@ -213,29 +209,29 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
   };
 
   return (
-    <div className="flex-1 flex flex-col theme-glass-card rounded-[2.5rem] overflow-hidden h-[calc(100vh-180px)] border-white/5">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 chat-blueprint">
+    <div className="flex-1 flex flex-col theme-glass-card rounded-[2rem] md:rounded-[2.5rem] overflow-hidden h-[calc(100vh-120px)] md:h-[calc(100vh-180px)] border-white/5">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 md:space-y-8 chat-blueprint">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`flex gap-3 max-w-[92%] md:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-              <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-white border border-black/10 shadow-lg overflow-hidden p-0.5">
-                {msg.role === 'user' ? <span className="font-black text-blue-900 text-sm uppercase">{user.name[0]}</span> : <img src={BOT_LOGO} className="w-full h-full object-contain" alt="IETE" />}
+            <div className={`flex gap-2 md:gap-3 max-w-[95%] md:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-white border border-black/10 shadow-lg overflow-hidden p-0.5">
+                {msg.role === 'user' ? <span className="font-black text-blue-900 text-xs md:text-sm uppercase">{user.name[0]}</span> : <img src={BOT_LOGO} className="w-full h-full object-contain" alt="IETE" />}
               </div>
-              <div className="flex flex-col gap-2">
-                <div className={`rounded-3xl px-6 py-5 shadow-2xl border backdrop-blur-xl transition-all ${msg.role === 'user' ? 'bg-blue-950 text-white border-blue-800' : 'bg-[var(--card-bg)] text-[var(--text-primary)] border-[var(--border-color)]'}`}>
-                  <div className="markdown-body prose prose-invert max-w-none text-[15px] leading-relaxed">
+              <div className="flex flex-col gap-2 overflow-hidden">
+                <div className={`rounded-2xl md:rounded-3xl px-4 md:px-6 py-3 md:py-5 shadow-2xl border backdrop-blur-xl transition-all ${msg.role === 'user' ? 'bg-blue-950 text-white border-blue-800' : 'bg-[var(--card-bg)] text-[var(--text-primary)] border-[var(--border-color)]'}`}>
+                  <div className="markdown-body prose prose-invert max-w-none text-[13px] md:text-[15px] leading-relaxed break-words overflow-hidden">
                     <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>{msg.content}</ReactMarkdown>
                     {msg.id.startsWith('init-') && isTyping && <span className="typing-cursor"></span>}
                   </div>
                   {msg.sources && msg.sources.length > 0 && (
-                    <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap gap-2">
-                      {msg.sources.map((s, i) => <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="text-[10px] bg-blue-500/10 px-3 py-1.5 rounded-full text-blue-400 font-black border border-blue-500/20 hover:bg-blue-500/30 transition-all uppercase tracking-widest">{s.title}</a>)}
+                    <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-white/10 flex flex-wrap gap-2">
+                      {msg.sources.map((s, i) => <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="text-[9px] md:text-[10px] bg-blue-500/10 px-2 md:px-3 py-1 md:py-1.5 rounded-full text-blue-400 font-black border border-blue-500/20 hover:bg-blue-500/30 transition-all uppercase tracking-widest">{s.title}</a>)}
                     </div>
                   )}
                 </div>
                 {msg.image && (
-                  <div className="rounded-2xl border border-[var(--border-color)] overflow-hidden bg-white/5 p-1.5 shadow-2xl transform hover:scale-[1.01] transition-transform">
-                    <img src={`data:${msg.image.mimeType};base64,${msg.image.data}`} className="w-full h-auto max-h-[600px] object-contain rounded-xl" alt="Technical Visualization" />
+                  <div className="rounded-xl md:rounded-2xl border border-[var(--border-color)] overflow-hidden bg-white/5 p-1 md:p-1.5 shadow-2xl transform hover:scale-[1.01] transition-transform">
+                    <img src={`data:${msg.image.mimeType};base64,${msg.image.data}`} className="w-full h-auto max-h-[400px] md:max-h-[600px] object-contain rounded-lg md:rounded-xl" alt="Technical Visualization" />
                   </div>
                 )}
               </div>
@@ -245,52 +241,52 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       </div>
 
       {/* Reorganized & Complete Engineering Power Toolkit */}
-      <div className="px-6 py-4 bg-black/40 border-t border-white/5 overflow-x-auto no-scrollbar shadow-inner">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-1">
+      <div className="px-3 md:px-6 py-3 md:py-4 bg-black/40 border-t border-white/5 overflow-x-auto no-scrollbar shadow-inner">
+        <div className="flex flex-col gap-3 md:gap-4">
+          <div className="flex items-center gap-3 md:gap-4 overflow-x-auto no-scrollbar pb-1">
             <div className="flex items-center gap-2">
-              <span className="text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded uppercase">Vision</span>
-              <button onClick={() => handleActionClick('formula_ocr')} className="iete-tool-btn border-blue-500/50 bg-blue-500/10">📝 OCR Formula</button>
+              <span className="text-[8px] md:text-[9px] font-black bg-blue-600 text-white px-1.5 md:px-2 py-0.5 rounded uppercase">Vision</span>
+              <button onClick={() => handleActionClick('formula_ocr')} className="iete-tool-btn border-blue-500/50 bg-blue-500/10">📝 OCR</button>
               <button onClick={() => handleActionClick('debug')} className="iete-tool-btn">🛠️ Debug</button>
-              <button onClick={() => handleActionClick('extract')} className="iete-tool-btn">📄 Table Extract</button>
+              <button onClick={() => handleActionClick('extract')} className="iete-tool-btn">📄 Table</button>
               <button onClick={() => handleActionClick('visualize')} className="iete-tool-btn">🎨 Schematic</button>
             </div>
-            <div className="flex items-center gap-2 border-l border-white/10 pl-3">
-              <span className="text-[9px] font-black bg-emerald-600 text-white px-2 py-0.5 rounded uppercase">Design</span>
-              <button onClick={() => handleActionClick('step_by_step')} className="iete-tool-btn border-emerald-500/50 bg-emerald-500/10">🔢 Step-by-Step</button>
+            <div className="flex items-center gap-2 border-l border-white/10 pl-2 md:pl-3">
+              <span className="text-[8px] md:text-[9px] font-black bg-emerald-600 text-white px-1.5 md:px-2 py-0.5 rounded uppercase">Design</span>
+              <button onClick={() => handleActionClick('step_by_step')} className="iete-tool-btn border-emerald-500/50 bg-emerald-500/10">🔢 Step</button>
               <button onClick={() => handleActionClick('boolean')} className="iete-tool-btn">🧮 K-Map</button>
-              <button onClick={() => handleActionClick('hdl')} className="iete-tool-btn">💻 HDL Code</button>
-              <button onClick={() => handleActionClick('project')} className="iete-tool-btn">🏗️ Project Bot</button>
+              <button onClick={() => handleActionClick('hdl')} className="iete-tool-btn">💻 HDL</button>
+              <button onClick={() => handleActionClick('project')} className="iete-tool-btn">🏗️ Project</button>
             </div>
-            <div className="flex items-center gap-2 border-l border-white/10 pl-3">
-              <span className="text-[9px] font-black bg-rose-600 text-white px-2 py-0.5 rounded uppercase">Research</span>
-              <button onClick={() => handleActionClick('gate_pyq')} className="iete-tool-btn">🎓 GATE PYQ</button>
-              <button onClick={() => handleActionClick('datasheet')} className="iete-tool-btn">📑 Datasheet</button>
+            <div className="flex items-center gap-2 border-l border-white/10 pl-2 md:pl-3">
+              <span className="text-[8px] md:text-[9px] font-black bg-rose-600 text-white px-1.5 md:px-2 py-0.5 rounded uppercase">Res</span>
+              <button onClick={() => handleActionClick('gate_pyq')} className="iete-tool-btn">🎓 GATE</button>
+              <button onClick={() => handleActionClick('datasheet')} className="iete-tool-btn">📑 Sheet</button>
               <button onClick={() => handleActionClick('pinout')} className="iete-tool-btn">📍 Pinout</button>
-              <button onClick={() => handleActionClick('viva')} className="iete-tool-btn">🎤 Viva Prep</button>
-              <button onClick={() => handleActionClick('direct')} className="iete-tool-btn">🎯 Direct Ans</button>
+              <button onClick={() => handleActionClick('viva')} className="iete-tool-btn">🎤 Viva</button>
+              <button onClick={() => handleActionClick('direct')} className="iete-tool-btn">🎯 Direct</button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-4 md:p-8 bg-[var(--header-bg)] border-t border-[var(--border-color)]">
+      <div className="p-3 md:p-8 bg-[var(--header-bg)] border-t border-[var(--border-color)]">
         {selectedMedia && (
-          <div className="mb-6 flex items-center gap-4 p-4 bg-blue-900/10 rounded-3xl border border-blue-900/30 animate-in slide-in-from-bottom-2">
+          <div className="mb-4 md:mb-6 flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-blue-900/10 rounded-2xl md:rounded-3xl border border-blue-900/30 animate-in slide-in-from-bottom-2">
             <div className="relative group">
-              <img src={`data:${selectedMedia.mimeType};base64,${selectedMedia.data}`} className="h-20 w-20 rounded-2xl object-cover border-2 border-blue-500 shadow-2xl" />
-              <button onClick={() => setSelectedMedia(null)} className="absolute -top-3 -right-3 bg-red-600 text-white rounded-full p-2 shadow-xl hover:bg-red-700 transition-all">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+              <img src={`data:${selectedMedia.mimeType};base64,${selectedMedia.data}`} className="h-14 w-14 md:h-20 md:w-20 rounded-xl md:rounded-2xl object-cover border-2 border-blue-500 shadow-2xl" />
+              <button onClick={() => setSelectedMedia(null)} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1.5 shadow-xl hover:bg-red-700 transition-all">
+                <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
             <div className="flex flex-col">
-              <h4 className="text-[11px] font-black text-blue-400 uppercase tracking-widest">Feed Initialized</h4>
-              <p className="text-[10px] text-[var(--text-secondary)]">Ready for OCR, Debugging, or Technical Analysis.</p>
+              <h4 className="text-[9px] md:text-[11px] font-black text-blue-400 uppercase tracking-widest">Feed Initialized</h4>
+              <p className="text-[8px] md:text-[10px] text-[var(--text-secondary)]">Ready for Analysis.</p>
             </div>
           </div>
         )}
 
-        <form onSubmit={handleSend} className="flex gap-4 max-w-7xl mx-auto">
+        <form onSubmit={handleSend} className="flex gap-2 md:gap-4 w-full max-w-7xl mx-auto">
           <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) {
@@ -305,22 +301,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
           <button 
             type="button" 
             onClick={() => fileInputRef.current?.click()} 
-            className="p-5 rounded-3xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-blue-500 hover:border-blue-500/30 transition-all shadow-inner group"
+            className="p-3 md:p-5 rounded-xl md:rounded-3xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-blue-500 hover:border-blue-500/30 transition-all shadow-inner group flex-shrink-0"
           >
-            <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            <svg className="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
           </button>
           <input
             type="text" value={input} onChange={(e) => setInput(e.target.value)}
-            placeholder="Search GATE, HDL, Pinouts, or use Toolkit..."
-            className="flex-1 px-8 py-5 rounded-3xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] outline-none focus:border-blue-900/50 text-sm transition-all shadow-inner placeholder:text-white/20"
+            placeholder="Type query..."
+            className="flex-1 min-w-0 px-4 md:px-8 py-3 md:py-5 rounded-xl md:rounded-3xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] outline-none focus:border-blue-900/50 text-xs md:text-sm transition-all shadow-inner placeholder:text-white/20"
             disabled={isLoading || isTyping}
           />
           <button 
             type="submit" 
             disabled={isLoading || isTyping || (!input.trim() && !selectedMedia)} 
-            className="px-12 py-5 bg-gradient-to-br from-blue-700 to-blue-950 text-white rounded-3xl font-black uppercase text-[12px] tracking-[0.3em] shadow-2xl hover:brightness-125 hover:shadow-blue-500/20 transition-all disabled:opacity-30 disabled:grayscale"
+            className="px-4 md:px-10 py-3 md:py-5 bg-gradient-to-br from-blue-700 to-blue-950 text-white rounded-xl md:rounded-3xl font-black uppercase text-[10px] md:text-[12px] tracking-[0.1em] md:tracking-[0.3em] shadow-2xl hover:brightness-125 hover:shadow-blue-500/20 transition-all disabled:opacity-30 disabled:grayscale flex-shrink-0"
           >
-            {isLoading ? <div className="w-5 h-5 border-3 border-t-transparent border-white rounded-full animate-spin" /> : "TRANSMIT"}
+            {isLoading ? <div className="w-4 h-4 md:w-5 md:h-5 border-2 md:border-3 border-t-transparent border-white rounded-full animate-spin" /> : "TRANSMIT"}
           </button>
         </form>
       </div>
@@ -329,18 +325,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         .iete-tool-btn {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          border-radius: 1rem;
+          gap: 0.3rem;
+          padding: 0.4rem 0.8rem;
+          border-radius: 0.8rem;
           background: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(255, 255, 255, 0.1);
           color: white;
-          font-size: 10px;
+          font-size: 9px;
           font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.03em;
           white-space: nowrap;
           transition: all 0.2s;
+        }
+        @media (min-width: 768px) {
+          .iete-tool-btn {
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            font-size: 10px;
+            letter-spacing: 0.05em;
+          }
         }
         .iete-tool-btn:hover {
           background: rgba(59, 130, 246, 0.15);
@@ -350,6 +355,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         .iete-tool-btn:active {
           transform: translateY(0);
           background: rgba(59, 130, 246, 0.25);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>
