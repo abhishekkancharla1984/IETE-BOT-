@@ -1,8 +1,7 @@
-
 import { GoogleGenAI } from "@google/genai";
 
-// Using 'gemini-3-pro-preview' for complex engineering reasoning, advanced math, and STEM tasks as recommended.
-const TEXT_MODEL = 'gemini-3-pro-preview';
+// Using 'gemini-flash-lite-latest' for responsive and efficient engineering assistance.
+const TEXT_MODEL = 'gemini-flash-lite-latest';
 const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export interface SendMessageOptions {

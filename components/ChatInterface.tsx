@@ -210,6 +210,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
     processMessage(txt, media || undefined);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const b64 = (reader.result as string).split(',')[1];
+        setSelectedMedia({ data: b64, mimeType: file.type });
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
+
   return (
     <div className="flex-1 flex flex-col theme-glass-card rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden h-[calc(100vh-140px)] md:h-[calc(100vh-180px)] border-white/5 w-full relative">
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 md:p-8 space-y-5 md:space-y-8 chat-blueprint w-full max-w-full">
@@ -268,21 +281,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         <div className="flex flex-col gap-3 md:gap-4">
           <div className="flex items-center gap-3 md:gap-4 overflow-x-auto no-scrollbar pb-1">
             <div className="flex items-center gap-2">
-              <span className="text-[8px] md:text-[9px] font-black bg-blue-600 text-white px-1.5 md:px-2 py-0.5 rounded uppercase">Vision</span>
+              <span className="text-[7px] md:text-[8px] font-black bg-blue-600 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">Vision</span>
               <button onClick={() => handleActionClick('formula_ocr')} className="iete-tool-btn border-blue-500/50 bg-blue-500/10">📝 OCR</button>
               <button onClick={() => handleActionClick('debug')} className="iete-tool-btn">🛠️ Debug</button>
               <button onClick={() => handleActionClick('extract')} className="iete-tool-btn">📄 Table</button>
               <button onClick={() => handleActionClick('visualize')} className="iete-tool-btn">🎨 Blueprint</button>
             </div>
             <div className="flex items-center gap-2 border-l border-white/10 pl-2 md:pl-3">
-              <span className="text-[8px] md:text-[9px] font-black bg-emerald-600 text-white px-1.5 md:px-2 py-0.5 rounded uppercase">Logic</span>
+              <span className="text-[7px] md:text-[8px] font-black bg-emerald-600 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">Logic</span>
               <button onClick={() => handleActionClick('step_by_step')} className="iete-tool-btn border-emerald-500/50 bg-emerald-500/10">🔢 Step</button>
               <button onClick={() => handleActionClick('boolean')} className="iete-tool-btn">🧮 Logic</button>
               <button onClick={() => handleActionClick('hdl')} className="iete-tool-btn">💻 HDL</button>
-              <button onClick={() => handleActionClick('project')} className="iete-tool-btn">🏗️ Blueprint</button>
+              <button onClick={() => handleActionClick('project')} className="iete-tool-btn">🏗️ Project</button>
             </div>
             <div className="flex items-center gap-2 border-l border-white/10 pl-2 md:pl-3">
-              <span className="text-[8px] md:text-[9px] font-black bg-rose-600 text-white px-1.5 md:px-2 py-0.5 rounded uppercase">Data</span>
+              <span className="text-[7px] md:text-[8px] font-black bg-rose-600 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">Data</span>
               <button onClick={() => handleActionClick('gate_pyq')} className="iete-tool-btn">🎓 GATE</button>
               <button onClick={() => handleActionClick('datasheet')} className="iete-tool-btn">📑 Sheets</button>
               <button onClick={() => handleActionClick('pinout')} className="iete-tool-btn">📍 Pins</button>
@@ -308,35 +321,39 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
           </div>
         )}
 
-        <form onSubmit={handleSend} className="flex gap-2 md:gap-4 w-full max-w-full">
-          <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                const b64 = (reader.result as string).split(',')[1];
-                setSelectedMedia({ data: b64, mimeType: file.type });
-              };
-              reader.readAsDataURL(file);
-            }
-          }} />
+        <form onSubmit={handleSend} className="flex gap-2 md:gap-3 w-full max-w-full">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/*" 
+            onChange={handleFileChange} 
+          />
+
           <button 
             type="button" 
             onClick={() => fileInputRef.current?.click()} 
-            className="p-3 md:p-5 rounded-xl md:rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-blue-500 transition-all flex-shrink-0"
+            title="Upload Image or Take Photo"
+            className="p-3 md:p-5 rounded-xl md:rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-blue-500 transition-all flex-shrink-0 flex items-center justify-center relative overflow-hidden group"
           >
-            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <svg className="w-5 h-5 md:w-6 md:h-6 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 11v4m-2-2h4" className="opacity-70" />
+            </svg>
           </button>
+
           <input
             type="text" value={input} onChange={(e) => setInput(e.target.value)}
             placeholder="Transmit technical query..."
-            className="flex-1 min-w-0 px-4 md:px-6 py-3 md:py-5 rounded-xl md:rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] outline-none focus:border-blue-900/50 text-xs md:text-sm transition-all"
+            className="flex-1 min-w-0 px-4 md:px-6 py-3 md:py-5 rounded-xl md:rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] outline-none focus:border-blue-900/50 text-xs md:text-sm transition-all shadow-inner"
             disabled={isLoading || isTyping}
           />
           <button 
             type="submit" 
             disabled={isLoading || isTyping || (!input.trim() && !selectedMedia)} 
-            className="px-4 md:px-8 py-3 md:py-5 bg-gradient-to-br from-blue-700 to-blue-900 text-white rounded-xl md:rounded-2xl font-black uppercase text-[10px] md:text-[12px] tracking-widest shadow-xl disabled:opacity-30 transition-all flex-shrink-0"
+            className="px-4 md:px-8 py-3 md:py-5 bg-gradient-to-br from-blue-700 to-blue-900 text-white rounded-xl md:rounded-2xl font-black uppercase text-[10px] md:text-[12px] tracking-widest shadow-xl disabled:opacity-30 transition-all flex-shrink-0 active:scale-95"
           >
             {isLoading ? <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> : "SEND"}
           </button>
