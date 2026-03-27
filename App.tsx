@@ -72,6 +72,7 @@ const App: React.FC = () => {
         <div className="flex flex-col items-center gap-1">
           <p>© {new Date().getFullYear()} The Institution of Electronics and Telecommunication Engineers (IETE).</p>
           <p className="uppercase tracking-widest font-medium text-[var(--text-primary)]">Electronics • Telecommunication • Information Technology</p>
+          <p className="mt-1">Developed by <span className="font-bold">ABHISHEK GUPTA KANCHARLA</span> in collaboration with IETE</p>
         </div>
       </footer>
     </div>
