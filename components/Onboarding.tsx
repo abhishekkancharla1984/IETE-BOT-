@@ -57,7 +57,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStart }) => {
                 className="w-full h-full object-contain"
               />
             </div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tighter uppercase mb-1 text-[var(--text-primary)]">IETE Bot</h1>
+            <h2 className="text-2xl md:text-3xl font-black tracking-tighter uppercase mb-1 text-[var(--text-primary)]">IETE Bot</h2>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
               <p className="text-blue-500 font-bold text-[8px] md:text-[9px] uppercase tracking-[0.3em] md:tracking-[0.4em]">Official Terminal</p>
