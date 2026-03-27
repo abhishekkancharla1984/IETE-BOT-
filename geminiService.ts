@@ -19,9 +19,9 @@ export class GeminiService {
   constructor() {}
 
   private getAI() {
-    const apiKey = process.env.API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
     if (!apiKey) {
-      throw new Error("Missing API_KEY. Access restricted.");
+      throw new Error("Missing API_KEY. Access restricted. Please set GEMINI_API_KEY or API_KEY in your environment variables.");
     }
     return new GoogleGenAI({ apiKey });
   }

@@ -13,7 +13,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       // This maps the environment variable from Vercel/System to the app code
-      'process.env.API_KEY': JSON.stringify(env.API_KEY),
+      'process.env.GEMINI_API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || process.env.API_KEY || env.GEMINI_API_KEY || env.API_KEY),
+      'process.env.API_KEY': JSON.stringify(process.env.API_KEY || process.env.GEMINI_API_KEY || env.API_KEY || env.GEMINI_API_KEY),
     },
     build: {
       outDir: 'dist',
