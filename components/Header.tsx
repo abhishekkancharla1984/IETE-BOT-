@@ -55,7 +55,9 @@ const Header: React.FC<HeaderProps> = ({ onReset, showReset, currentTheme, onTog
             </div>
           </div>
           <div className="flex flex-col min-w-0">
-            <h1 className="text-xs md:text-lg font-bold leading-tight text-[var(--text-primary)] truncate">IETE Bot</h1>
+            <h1 className="text-xs md:text-lg font-bold leading-tight text-[var(--text-primary)] truncate">
+              IETE Bot <span className="sr-only">by ABHISHEK GUPTA KANCHARLA</span>
+            </h1>
             <div className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
               <p className="text-[7px] md:text-[9px] opacity-60 font-medium uppercase tracking-wider text-[var(--text-secondary)] truncate">Raghu Terminal</p>
