@@ -2,10 +2,10 @@ import { GoogleGenAI } from "@google/genai";
 
 /**
  * MODELS SELECTION:
- * We use 'gemini-flash-lite-latest' for the fastest possible text processing.
+ * We use 'gemini-3-flash-preview' for the fastest possible text processing.
  * Nano banana series for images.
  */
-const TEXT_MODEL = 'gemini-flash-lite-latest';
+const TEXT_MODEL = 'gemini-3-flash-preview';
 const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export interface SendMessageOptions {

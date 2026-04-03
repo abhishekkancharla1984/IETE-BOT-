@@ -71,12 +71,12 @@ const Header: React.FC<HeaderProps> = ({ onReset, showReset, currentTheme, onTog
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 md:gap-4 flex-shrink-0">
-          <div className="flex flex-col items-end mr-1 md:mr-2">
-            <p className="text-[8px] md:text-[10px] font-black text-blue-500 uppercase tracking-widest leading-none">
+        <div className="flex items-center gap-2 md:gap-6 flex-shrink-0">
+          <div className="flex flex-col items-end mr-1 md:mr-3 border-r border-white/10 pr-2 md:pr-4">
+            <p className="text-[10px] md:text-[13px] font-black text-blue-500 uppercase tracking-widest leading-none">
               {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </p>
-            <p className="text-[6px] md:text-[7px] font-bold opacity-40 uppercase tracking-tighter mt-0.5">
+            <p className="text-[7px] md:text-[9px] font-bold opacity-60 text-blue-400/80 uppercase tracking-widest mt-1">
               {time.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
             </p>
           </div>
