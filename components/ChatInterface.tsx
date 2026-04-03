@@ -55,7 +55,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
 
     const initialId = 'init-' + Date.now();
     setMessages([{ id: initialId, role: 'assistant', content: '', timestamp: new Date() }]);
-    geminiService.initChat(user.name);
+    geminiService.initChat(user.name, new Date().toLocaleString());
 
     const greeting = getGreeting();
     const welcome = `${greeting}, ${user.name}! 👋 Terminal online. I am IETE Bot. ${deepSearch ? 'Current Affairs & General Search mode enabled.' : 'Specialized Engineering mode enabled.'} Type your message and click EXECUTE.`;

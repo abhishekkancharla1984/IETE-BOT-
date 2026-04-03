@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThemeMode } from '../App';
 
 interface HeaderProps {
@@ -9,8 +9,14 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onReset, showReset, currentTheme, onToggleTheme }) => {
+  const [time, setTime] = useState(new Date());
   const IETE_LOGO = "https://jit.ac.in/assets/uploads/2022/12/IETE-logo.png";
   const RAGHU_LOGO = "https://www.aicjitf.org/wp-content/uploads/2021/12/rec.png";
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
   
   const getThemeIcon = () => {
     switch(currentTheme) {
@@ -65,7 +71,16 @@ const Header: React.FC<HeaderProps> = ({ onReset, showReset, currentTheme, onTog
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1.5 md:gap-4 flex-shrink-0">
+          <div className="flex flex-col items-end mr-1 md:mr-2">
+            <p className="text-[8px] md:text-[10px] font-black text-blue-500 uppercase tracking-widest leading-none">
+              {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </p>
+            <p className="text-[6px] md:text-[7px] font-bold opacity-40 uppercase tracking-tighter mt-0.5">
+              {time.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+            </p>
+          </div>
+
           <button 
             onClick={onToggleTheme}
             className="p-1.5 md:p-2.5 rounded-lg md:rounded-xl border border-black/10 bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all flex items-center gap-1.5"
