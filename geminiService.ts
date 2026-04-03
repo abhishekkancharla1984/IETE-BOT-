@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 
 /**
  * MODELS SELECTION:
@@ -68,6 +68,7 @@ Operational Logic:
     const config: any = {
       systemInstruction: this.systemInstruction,
       tools: options.useSearch ? [{ googleSearch: {} }] : undefined,
+      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }
     };
 
     return await ai.models.generateContentStream({

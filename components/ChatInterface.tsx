@@ -297,12 +297,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
                     <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>{msg.content}</ReactMarkdown>
                   </div>
                   {msg.sources && msg.sources.length > 0 && (
-                    <div className="mt-4 pt-2 border-t border-white/5 flex flex-col gap-2">
-                      <p className="text-[7px] font-black text-blue-400 uppercase tracking-widest">Related Links:</p>
-                      <div className="flex flex-wrap gap-1">
+                    <div className="mt-4 pt-3 border-t border-white/10 flex flex-col gap-2">
+                      <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                        Related Web Resources:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
                         {msg.sources.map((s, i) => (
-                          <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="text-[8px] bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 text-blue-400 truncate max-w-[120px] hover:bg-blue-500/20 transition-colors">
-                            {s.title}
+                          <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="text-[9px] bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20 text-blue-300 truncate max-w-[150px] hover:bg-blue-500/20 hover:border-blue-500/40 transition-all flex items-center gap-1">
+                            <span className="truncate">{s.title}</span>
+                            <svg className="w-2 h-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                           </a>
                         ))}
                       </div>
@@ -408,8 +412,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
             type="text" value={input} onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
+                // Standard behavior is prevented to ensure ONLY the Execute button triggers the API.
+                // The user explicitly requested "only when user click execute button".
               }
             }}
             placeholder={activeAction ? `Mode: ${getActionLabel(activeAction)}...` : (deepSearch ? "Query Search/News..." : "Query Engineering...")}
