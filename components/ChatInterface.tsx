@@ -11,7 +11,8 @@ interface ChatInterfaceProps { user: UserProfile; }
 type ToolkitAction = 
   | 'extract' | 'debug' | 'visualize' | 'boolean' | 'gate_pyq' 
   | 'direct' | 'step_by_step' | 'viva' | 'pinout' | 'hdl' | 'project' | 'datasheet' | 'formula_ocr'
-  | 'text_extract' | 'formulas_only' | 'unit_converter' | 'lab_assistant' | 'component_finder' | 'code_explainer';
+  | 'text_extract' | 'formulas_only' | 'unit_converter' | 'lab_assistant' | 'component_finder' | 'code_explainer'
+  | 'problem_solving' | 'related';
 
 interface ToolCategory {
   name: string;
@@ -31,6 +32,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
   const [deepSearch, setDeepSearch] = useState(false);
   
   const scrollRef = useRef<HTMLDivElement>(null);
+  const toolkitRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadMenuRef = useRef<HTMLDivElement>(null);
@@ -41,8 +43,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
   const categories: ToolCategory[] = [
     { name: 'Study', color: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-400', activeColor: 'ring-emerald-500 bg-emerald-500/20', tools: ['formulas_only', 'viva', 'gate_pyq', 'step_by_step', 'lab_assistant'] },
     { name: 'Analysis', color: 'border-blue-500/30 bg-blue-500/5 text-blue-400', activeColor: 'ring-blue-500 bg-blue-500/20', tools: ['debug', 'code_explainer', 'boolean', 'extract', 'formula_ocr'] },
-    { name: 'Design', color: 'border-purple-500/30 bg-purple-500/5 text-purple-400', activeColor: 'ring-purple-500 bg-purple-500/20', tools: ['visualize', 'hdl', 'project', 'pinout', 'component_finder'] },
-    { name: 'Utility', color: 'border-amber-500/30 bg-amber-500/5 text-amber-400', activeColor: 'ring-amber-500 bg-amber-500/20', tools: ['unit_converter', 'datasheet', 'text_extract', 'direct'] }
+    { name: 'Design', color: 'border-purple-500/30 bg-purple-500/5 text-purple-400', activeColor: 'ring-purple-500 bg-purple-500/20', tools: ['visualize', 'hdl', 'project', 'pinout'] },
+    { name: 'Utility', color: 'border-amber-500/30 bg-amber-500/5 text-amber-400', activeColor: 'ring-amber-500 bg-amber-500/20', tools: ['unit_converter', 'datasheet', 'direct'] },
+    { name: 'Intelligence', color: 'border-orange-500/30 bg-orange-500/5 text-orange-400', activeColor: 'ring-orange-500 bg-orange-500/20', tools: ['text_extract', 'component_finder', 'problem_solving', 'related'] }
   ];
 
   useEffect(() => {
@@ -173,8 +176,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
    * CENTRAL EXECUTION POINT:
    * Only sends request when Execute is clicked.
    */
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSend = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (isLoading || isTyping) return;
 
     let textToProcess = input.trim();
@@ -209,6 +212,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         case 'project': prefix = "[PROJECT] "; break;
         case 'datasheet': prefix = "[DATASHEET] "; break;
         case 'viva': prefix = "[VIVA] "; break;
+        case 'problem_solving': prefix = "[SOLVE] "; break;
+        case 'related': prefix = "[RELATED] "; break;
       }
       textToProcess = prefix + (textToProcess || "Analysis request.");
     }
@@ -240,10 +245,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       case 'formulas_only': return 'Formulas';
       case 'unit_converter': return 'Convert';
       case 'lab_assistant': return 'Lab';
-      case 'component_finder': return 'IC Find';
+      case 'component_finder': return 'ID Comp';
       case 'code_explainer': return 'Explain';
       case 'formula_ocr': return 'OCR';
-      case 'text_extract': return 'Text';
+      case 'text_extract': return 'Text Ext';
       case 'debug': return 'Debug';
       case 'extract': return 'Table';
       case 'visualize': return 'Draw';
@@ -256,14 +261,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
       case 'pinout': return 'Pinout';
       case 'viva': return 'Viva';
       case 'direct': return 'Direct';
+      case 'problem_solving': return 'Solve';
+      case 'related': return 'Related';
       default: return '';
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col theme-glass-card rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden h-[calc(100vh-140px)] md:h-[calc(100vh-180px)] border-white/5 w-full relative">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 md:p-8 space-y-5 md:space-y-8 chat-blueprint w-full max-w-full">
-        <div className="flex flex-col items-center justify-center py-6 md:py-8 mb-4 border-b border-white/10 bg-white/5 rounded-2xl md:rounded-3xl mx-1">
+    <div className="flex-1 flex flex-col theme-glass-card rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden h-[calc(100vh-140px)] md:h-[calc(100vh-180px)] border-white/10 w-full relative shadow-[0_0_50px_-12px_rgba(59,130,246,0.15)]">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 md:p-8 space-y-5 md:space-y-8 chat-blueprint w-full max-w-full relative">
+        <div className="flex flex-col items-center justify-center py-6 md:py-8 mb-4 border-b border-white/10 bg-white/5 rounded-2xl md:rounded-3xl mx-1 relative z-10">
            <img src={COLLEGE_LOGO} alt="Raghu Engineering College" className="h-10 md:h-14 object-contain mb-3" />
           <div className="text-center">
             <h3 className="text-[10px] md:text-xs font-black text-blue-400 uppercase tracking-widest">Raghu Engineering College</h3>
@@ -272,7 +279,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         </div>
 
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full`}>
+          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full relative z-10`}>
             <div className={`flex gap-2 md:gap-3 max-w-[96%] md:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
               <div className="w-8 h-8 md:w-9 md:h-9 rounded-full flex-shrink-0 flex items-center justify-center bg-white border border-black/10 overflow-hidden mt-1 shadow-lg">
                 {msg.role === 'user' ? (
@@ -282,18 +289,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
                 )}
               </div>
               <div className="flex flex-col gap-2 min-w-0">
-                <div className={`rounded-xl md:rounded-2xl px-4 md:px-5 py-3 shadow-xl border backdrop-blur-xl ${msg.role === 'user' ? 'bg-blue-950 text-white border-blue-800' : 'bg-[var(--card-bg)] text-[var(--text-primary)] border-[var(--border-color)]'}`}>
-                  <div className="markdown-body prose prose-invert max-w-none text-[13px] md:text-[14px] leading-relaxed break-words">
+                <div className={`rounded-xl md:rounded-2xl px-4 md:px-5 py-3 shadow-xl border backdrop-blur-xl relative overflow-hidden ${msg.role === 'user' ? 'bg-blue-950 text-white border-blue-800' : 'bg-[var(--card-bg)] text-[var(--text-primary)] border-[var(--border-color)] shadow-blue-500/5'}`}>
+                  {msg.role === 'assistant' && (
+                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#3b82f6 1px, transparent 1px), linear-gradient(90deg, #3b82f6 1px, transparent 1px)', backgroundSize: '10px 10px' }}></div>
+                  )}
+                  <div className="relative z-10 markdown-body prose prose-invert max-w-none text-[13px] md:text-[14px] leading-relaxed break-words">
                     <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>{msg.content}</ReactMarkdown>
-                    {msg.id.startsWith('init-') && isTyping && <span className="typing-cursor"></span>}
                   </div>
                   {msg.sources && msg.sources.length > 0 && (
-                    <div className="mt-4 pt-2 border-t border-white/5 flex flex-wrap gap-1">
-                      {msg.sources.map((s, i) => (
-                        <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="text-[8px] bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 text-blue-400 truncate max-w-[120px]">
-                          {s.title}
-                        </a>
-                      ))}
+                    <div className="mt-4 pt-2 border-t border-white/5 flex flex-col gap-2">
+                      <p className="text-[7px] font-black text-blue-400 uppercase tracking-widest">Related Links:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {msg.sources.map((s, i) => (
+                          <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="text-[8px] bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 text-blue-400 truncate max-w-[120px] hover:bg-blue-500/20 transition-colors">
+                            {s.title}
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -313,7 +325,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
           <div className="flex items-center gap-2 pb-1 border-b border-white/10">
             <button 
               onClick={() => setDeepSearch(!deepSearch)} 
-              className={`iete-tool-btn min-w-[130px] border-2 ${deepSearch ? 'bg-blue-600/20 border-blue-500 text-blue-300' : 'border-white/10 opacity-60'}`}
+              className={`iete-tool-btn min-w-[130px] border-2 transition-all duration-300 ${deepSearch ? 'bg-orange-600/40 border-orange-500 text-orange-100 shadow-[0_0_20px_rgba(249,115,22,0.4)] ring-1 ring-orange-400/30' : 'border-white/10 opacity-60'}`}
             >
               {deepSearch ? '⚡ SEARCH: ON' : '🌐 SEARCH: OFF'}
             </button>
@@ -323,23 +335,39 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
             </p>
           </div>
 
-          <div className="flex flex-nowrap gap-3 md:gap-5 overflow-x-auto no-scrollbar py-1">
-            {categories.map((cat) => (
-              <div key={cat.name} className={`flex flex-col gap-1.5 p-2 rounded-xl border ${cat.color} min-w-max`}>
-                <span className="text-[7px] font-black uppercase tracking-tighter ml-1 opacity-80">{cat.name}</span>
-                <div className="flex items-center gap-1.5">
-                  {cat.tools.map((tool) => (
-                    <button 
-                      key={tool} 
-                      onClick={() => handleActionClick(tool)} 
-                      className={`tool-pill ${activeAction === tool ? `tool-pill-active ${cat.activeColor}` : ''}`}
-                    >
-                      {getActionLabel(tool)}
-                    </button>
-                  ))}
+          <div className="relative flex items-center group">
+            <button 
+              onClick={() => toolkitRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
+              className="absolute left-0 z-20 p-1 bg-black/80 text-white rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1/2"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+
+            <div ref={toolkitRef} className="flex flex-nowrap gap-3 md:gap-5 overflow-x-auto no-scrollbar py-1 cursor-grab active:cursor-grabbing scroll-smooth">
+              {categories.map((cat) => (
+                <div key={cat.name} className={`flex flex-col gap-1.5 p-2 rounded-xl border ${cat.color} min-w-max`}>
+                  <span className="text-[7px] font-black uppercase tracking-tighter ml-1 opacity-80">{cat.name}</span>
+                  <div className="flex items-center gap-1.5">
+                    {cat.tools.map((tool) => (
+                      <button 
+                        key={tool} 
+                        onClick={() => handleActionClick(tool)} 
+                        className={`tool-pill ${activeAction === tool ? `tool-pill-active ${cat.activeColor}` : ''}`}
+                      >
+                        {getActionLabel(tool)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            <button 
+              onClick={() => toolkitRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
+              className="absolute right-0 z-20 p-1 bg-black/80 text-white rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity translate-x-1/2"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+            </button>
           </div>
         </div>
       </div>
@@ -378,11 +406,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
 
           <input
             type="text" value={input} onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             placeholder={activeAction ? `Mode: ${getActionLabel(activeAction)}...` : (deepSearch ? "Query Search/News..." : "Query Engineering...")}
             className={`flex-1 px-4 md:px-5 py-3 md:py-4 rounded-xl md:rounded-2xl bg-[var(--input-bg)] border transition-all text-xs outline-none ${activeAction ? 'border-blue-500/50' : 'border-[var(--border-color)] focus:border-blue-900/50'}`}
             disabled={isLoading}
           />
-          <button type="submit" disabled={isLoading || isTyping || (!input.trim() && !selectedMedia && !activeAction)} className="px-5 md:px-8 py-3 md:py-4 bg-gradient-to-br from-blue-700 to-blue-900 text-white rounded-xl md:rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl disabled:opacity-30 active:scale-95 transition-all">
+          <button type="submit" disabled={isLoading || isTyping || (!input.trim() && !selectedMedia && !activeAction)} className="px-5 md:px-8 py-3 md:py-4 bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white rounded-xl md:rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-900/20 disabled:opacity-30 active:scale-95 transition-all border border-blue-400/20">
             {isLoading ? <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> : "EXECUTE"}
           </button>
         </form>
@@ -416,11 +450,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
         }
         .tool-pill:hover { background: rgba(255, 255, 255, 0.2); }
         .tool-pill-active { 
-          color: white !important; 
-          ring: 2px;
-          border-color: rgba(255, 255, 255, 0.5) !important;
-          box-shadow: 0 0 12px rgba(255, 255, 255, 0.2); 
-          transform: translateY(-1px);
+          border-color: currentColor !important;
+          box-shadow: 0 0 20px currentColor; 
+          background: color-mix(in srgb, currentColor, transparent 80%) !important;
+          transform: translateY(-2px);
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

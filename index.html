@@ -139,8 +139,20 @@
       .chat-blueprint {
         background-image: 
           linear-gradient(rgba(59, 130, 246, var(--blueprint-opacity)) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(59, 130, 246, var(--blueprint-opacity)) 1px, transparent 1px);
-        background-size: 30px 30px;
+          linear-gradient(90deg, rgba(59, 130, 246, var(--blueprint-opacity)) 1px, transparent 1px),
+          radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
+        background-size: 40px 40px, 40px 40px, 100% 100%;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .chat-blueprint::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at center, transparent 0%, var(--global-bg) 100%);
+        opacity: 0.4;
+        pointer-events: none;
       }
 
       .theme-glass-card {
@@ -148,18 +160,6 @@
         backdrop-filter: blur(24px);
         border: 1px solid var(--border-color);
         box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
-      }
-
-      .typing-cursor::after {
-        content: "▊";
-        margin-left: 2px;
-        animation: blink 1s step-end infinite;
-        color: #3b82f6;
-      }
-
-      @keyframes blink {
-        from, to { opacity: 1; }
-        50% { opacity: 0; }
       }
 
       .markdown-body { font-size: 14px; line-height: 1.6; }
