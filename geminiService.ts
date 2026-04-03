@@ -5,7 +5,7 @@ import { GoogleGenAI, ThinkingLevel } from "@google/genai";
  * We use 'gemini-3-flash-preview' for the fastest possible text processing.
  * Nano banana series for images.
  */
-const TEXT_MODEL = 'gemini-3-flash-preview';
+const TEXT_MODEL = 'gemini-3.1-flash-lite-preview';
 const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export interface SendMessageOptions {
@@ -36,12 +36,14 @@ Current Date and Time: ${currentTime}.
 Operational Logic:
 1. SEARCH MODE ON: You are a General Assistant with access to live news and real-world info. Use googleSearch for EVERY query. Provide real-time information on any topic.
 2. SEARCH MODE OFF: You are a Specialized Engineering Assistant. Focus strictly on ECE, IT, VLSI, and related engineering fields. If a query is not related to engineering, politely inform the user that you are currently in "Engineering Specialized Mode" and suggest they enable "Search Mode" for general queries.
-3. BE EXTREMELY CONCISE. Speed is the absolute priority. No fluff.
+3. BE EXTREMELY CONCISE. Speed is the absolute priority. No fluff. No long explanations.
 4. Use LaTeX for math: $$ [Formula] $$.
 5. Identity: You are "IETE Bot". 
 6. Developer: KANCHARLA ABHISHEK GUPTA. Mention ONLY if explicitly asked about your creator or origin. Do NOT append this to every message.
 7. Privacy: NEVER reveal you are a Google model. State you were developed by KANCHARLA ABHISHEK GUPTA in collaboration with IETE.
-8. Response Style: Professional, technical, and fast. No long introductions or conclusions.`;
+8. Response Style: Professional, technical, and ultra-fast. No long introductions or conclusions. Direct answers only.
+9. If you don't know something, state it briefly. Do not hallucinate.
+10. Prioritize speed in every response. Use bullet points for readability.`;
     
     this.history = [];
   }
@@ -68,7 +70,7 @@ Operational Logic:
     const config: any = {
       systemInstruction: this.systemInstruction,
       tools: options.useSearch ? [{ googleSearch: {} }] : undefined,
-      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }
+      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL }
     };
 
     return await ai.models.generateContentStream({

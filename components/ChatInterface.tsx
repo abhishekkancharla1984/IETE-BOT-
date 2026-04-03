@@ -412,8 +412,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
             type="text" value={input} onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
+                // Prevent default Enter behavior to ensure ONLY Execute button triggers the API
                 e.preventDefault();
-                handleSend();
               }
             }}
             placeholder={activeAction ? `Mode: ${getActionLabel(activeAction)}...` : (deepSearch ? "Query Search/News..." : "Query Engineering...")}
