@@ -5,7 +5,7 @@ import { GoogleGenAI, ThinkingLevel } from "@google/genai";
  * We use 'gemini-3-flash-preview' for the fastest possible text processing.
  * Nano banana series for images.
  */
-const TEXT_MODEL = 'gemini-3.1-flash-lite-preview';
+const TEXT_MODEL = 'gemini-3-flash-preview';
 const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export interface SendMessageOptions {
@@ -70,7 +70,6 @@ Operational Logic:
     const config: any = {
       systemInstruction: this.systemInstruction,
       tools: options.useSearch ? [{ googleSearch: {} }] : undefined,
-      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL }
     };
 
     return await ai.models.generateContentStream({

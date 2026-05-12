@@ -400,7 +400,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
           </div>
         )}
 
-        <form onSubmit={handleSend} className="flex gap-2 md:gap-3">
+        <div className="flex gap-2 md:gap-3">
           <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
           <input type="file" ref={cameraInputRef} className="hidden" accept="image/*" capture="environment" onChange={handleFileChange} />
 
@@ -411,8 +411,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
           <input
             type="text" value={input} onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                // Prevent default Enter behavior to ensure ONLY Execute button triggers the API
+              if (e.key === 'Enter') {
+                // Strictly disable Enter key to fulfill user request: "Only send on click execute button"
                 e.preventDefault();
               }
             }}
@@ -420,10 +420,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
             className={`flex-1 px-4 md:px-5 py-3 md:py-4 rounded-xl md:rounded-2xl bg-[var(--input-bg)] border transition-all text-xs outline-none ${activeAction ? 'border-blue-500/50' : 'border-[var(--border-color)] focus:border-blue-900/50'}`}
             disabled={isLoading}
           />
-          <button type="submit" disabled={isLoading || isTyping || (!input.trim() && !selectedMedia && !activeAction)} className="px-5 md:px-8 py-3 md:py-4 bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white rounded-xl md:rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-900/20 disabled:opacity-30 active:scale-95 transition-all border border-blue-400/20">
+          <button 
+            type="button" 
+            onClick={() => handleSend()}
+            disabled={isLoading || isTyping || (!input.trim() && !selectedMedia && !activeAction)} 
+            className="px-5 md:px-8 py-3 md:py-4 bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white rounded-xl md:rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-900/20 disabled:opacity-30 active:scale-95 transition-all border border-blue-400/20"
+          >
             {isLoading ? <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> : "EXECUTE"}
           </button>
-        </form>
+        </div>
       </div>
       
       <style>{`
