@@ -10,7 +10,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onReset, showReset, currentTheme, onToggleTheme }) => {
   const [time, setTime] = useState(new Date());
-  const ELITE_LOGO = "https://lh3.googleusercontent.com/d/10TCBzAhJ0y0KAM30cBXcNnjADJV03Yql";
+  const ELITE_LOGO = "https://lh3.googleusercontent.com/d/1okR_9jrXleV9_e83vWb-THZq3re2k7eM";
   const RAGHU_LOGO = "https://www.aicjitf.org/wp-content/uploads/2021/12/rec.png";
 
   useEffect(() => {
@@ -42,31 +42,24 @@ const Header: React.FC<HeaderProps> = ({ onReset, showReset, currentTheme, onTog
     <header className="sticky top-0 z-50 w-full border-b border-black/10 bg-[var(--header-bg)] backdrop-blur-xl transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-2 overflow-hidden">
         <div className="flex items-center gap-2 md:gap-4 flex-shrink min-w-0">
-          <div className="flex items-center -space-x-1.5 md:-space-x-3 flex-shrink-0">
-            {/* Raghu Logo First */}
-            <div className="w-8 h-8 md:w-11 md:h-11 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden p-0.5 md:p-1 border border-black/10 relative z-20">
-               <img 
-                src={RAGHU_LOGO} 
-                alt="Raghu Logo" 
-                className="w-full h-full object-contain" 
-              />
-            </div>
-            {/* Elite Logo Second */}
-            <div className="w-8 h-8 md:w-11 md:h-11 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden p-0.5 md:p-1 border border-black/10 relative z-10">
+          <div className="flex items-center flex-shrink-0">
+            {/* Elite Logo */}
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-[#020617] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.5)] overflow-hidden p-1 border border-blue-500/20 relative z-10">
+               <div className="absolute inset-0 bg-blue-500/5 rounded-full animate-pulse"></div>
                <img 
                 src={ELITE_LOGO} 
                 alt="Elite Logo" 
-                className="w-full h-full object-contain" 
+                className="w-full h-full object-contain relative z-10" 
               />
             </div>
           </div>
           <div className="flex flex-col min-w-0">
-            <h1 className="text-xs md:text-lg font-bold leading-tight text-[var(--text-primary)] truncate">
-              Elite Bot <span className="sr-only">by abhishek kancharla</span>
+            <h1 className="text-sm md:text-xl font-black uppercase tracking-tighter leading-tight text-[var(--text-primary)] truncate">
+              Elite Bot <span className="sr-only">by ABHISHEK GUPTA KANCHARLA</span>
             </h1>
             <div className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
-              <p className="text-[7px] md:text-[9px] opacity-60 font-medium uppercase tracking-wider text-[var(--text-secondary)] truncate">Raghu Terminal</p>
+              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse flex-shrink-0"></span>
+              <p className="text-[7px] md:text-[9px] opacity-60 font-black uppercase tracking-widest text-blue-400 truncate">ELITEUNIVERSE AI TERMINAL</p>
             </div>
           </div>
         </div>

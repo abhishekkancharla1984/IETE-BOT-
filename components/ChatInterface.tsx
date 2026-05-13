@@ -37,8 +37,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadMenuRef = useRef<HTMLDivElement>(null);
   
-  const BOT_LOGO = "https://lh3.googleusercontent.com/d/10TCBzAhJ0y0KAM30cBXcNnjADJV03Yql";
-  const COLLEGE_LOGO = "https://www.aicjitf.org/wp-content/uploads/2021/12/rec.png";
+  const BOT_LOGO = "https://lh3.googleusercontent.com/d/1okR_9jrXleV9_e83vWb-THZq3re2k7eM";
 
   const categories: ToolCategory[] = [
     { name: 'Study', color: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-400', activeColor: 'ring-emerald-500 bg-emerald-500/20', tools: ['formulas_only', 'viva', 'gate_pyq', 'step_by_step', 'lab_assistant'] },
@@ -271,21 +270,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
     <div className="flex-1 flex flex-col theme-glass-card rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden h-[calc(100vh-140px)] md:h-[calc(100vh-180px)] border-white/10 w-full relative shadow-[0_0_50px_-12px_rgba(59,130,246,0.15)]">
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 md:p-8 space-y-5 md:space-y-8 chat-blueprint w-full max-w-full relative">
         <div className="flex flex-col items-center justify-center py-6 md:py-8 mb-4 border-b border-white/10 bg-white/5 rounded-2xl md:rounded-3xl mx-1 relative z-10">
-           <img src={COLLEGE_LOGO} alt="Raghu Engineering College" className="h-10 md:h-14 object-contain mb-3" />
+           <div className="w-12 h-12 md:w-16 md:h-16 bg-[#020617] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)] overflow-hidden p-1 border border-blue-500/20 mb-4 relative">
+              <div className="absolute inset-0 bg-blue-500/10 rounded-full animate-pulse"></div>
+              <img src={BOT_LOGO} alt="Elite Bot" className="w-full h-full object-contain relative z-10" />
+           </div>
           <div className="text-center">
-            <h3 className="text-[10px] md:text-xs font-black text-blue-400 uppercase tracking-widest">Raghu Engineering College</h3>
-            <p className="text-[8px] md:text-[9px] text-[var(--text-secondary)] uppercase font-medium mt-1">Elite AI Terminal</p>
+            <h3 className="text-[12px] md:text-sm font-black text-blue-400 uppercase tracking-[0.2em]">ELITEUNIVERSE AI TERMINAL</h3>
+            <p className="text-[8px] md:text-[10px] text-[var(--text-secondary)] uppercase font-bold mt-2 opacity-60 tracking-widest">Neural Link Established • Level 5 Authorization</p>
           </div>
         </div>
 
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full relative z-10`}>
             <div className={`flex gap-2 md:gap-3 max-w-[96%] md:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full flex-shrink-0 flex items-center justify-center bg-white border border-black/10 overflow-hidden mt-1 shadow-lg">
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full flex-shrink-0 flex items-center justify-center bg-[#020617] border border-blue-500/20 overflow-hidden mt-1 shadow-[0_0_10px_rgba(59,130,246,0.3)] relative">
                 {msg.role === 'user' ? (
-                  <span className="font-black text-blue-900 text-[10px] uppercase">{user.name[0]}</span>
+                  <span className="font-black text-blue-400 text-[10px] uppercase relative z-10">{user.name[0]}</span>
                 ) : (
-                  <img src={BOT_LOGO} className="w-full h-full object-contain p-1" alt="Elite" />
+                  <>
+                    <div className="absolute inset-0 bg-blue-500/5 rounded-full"></div>
+                    <img src={BOT_LOGO} className="w-full h-full object-contain p-1 relative z-10" alt="Elite" />
+                  </>
                 )}
               </div>
               <div className="flex flex-col gap-2 min-w-0">
@@ -412,8 +417,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
             type="text" value={input} onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                // Strictly disable Enter key to fulfill user request: "Only send on click execute button"
                 e.preventDefault();
+                // User requested: Only send when clicking Execute button manually.
               }
             }}
             placeholder={activeAction ? `Mode: ${getActionLabel(activeAction)}...` : (deepSearch ? "Query Search/News..." : "Query Engineering...")}

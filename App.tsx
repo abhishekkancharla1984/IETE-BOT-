@@ -13,7 +13,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // Load User
-    const savedUser = localStorage.getItem('iete_user');
+    const savedUser = localStorage.getItem('elite_user');
     if (savedUser) {
       try {
         const parsed = JSON.parse(savedUser);
@@ -22,7 +22,7 @@ const App: React.FC = () => {
     }
 
     // Load Theme
-    const savedTheme = localStorage.getItem('iete_theme') as ThemeMode;
+    const savedTheme = localStorage.getItem('elite_theme') as ThemeMode;
     if (savedTheme) {
       setTheme(savedTheme);
       document.body.setAttribute('data-theme', savedTheme);
@@ -34,11 +34,11 @@ const App: React.FC = () => {
   const handleStart = (name: string) => {
     const newUser: UserProfile = { name, joinedAt: new Date() };
     setUser(newUser);
-    localStorage.setItem('iete_user', JSON.stringify(newUser));
+    localStorage.setItem('elite_user', JSON.stringify(newUser));
   };
 
   const handleReset = () => {
-    localStorage.removeItem('iete_user');
+    localStorage.removeItem('elite_user');
     setUser(null);
   };
 
@@ -48,7 +48,7 @@ const App: React.FC = () => {
     const nextTheme = modes[nextIndex];
     setTheme(nextTheme);
     document.body.setAttribute('data-theme', nextTheme);
-    localStorage.setItem('iete_theme', nextTheme);
+    localStorage.setItem('elite_theme', nextTheme);
   };
 
   return (
@@ -68,11 +68,10 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="py-4 text-center text-[10px] opacity-60 bg-black/5 backdrop-blur-md border-t border-black/5 z-20">
-        <div className="flex flex-col items-center gap-1">
-          <p>© {new Date().getFullYear()} Elite Universe Terminal Collaboration.</p>
-          <p className="uppercase tracking-widest font-medium text-[var(--text-primary)]">Electronics • Telecommunication • Information Technology</p>
-          <p className="mt-1">developed by <span className="font-bold">abhishek kancharla</span> in collabrate with elite universe</p>
+      <footer className="py-4 text-center text-[9px] md:text-[10px] opacity-60 bg-black/5 backdrop-blur-md border-t border-black/5 z-20">
+        <div className="flex flex-col items-center gap-1 max-w-4xl mx-auto px-4">
+          <p>© {new Date().getFullYear()} ELITEUNIVERSE Terminal Collaboration.</p>
+          <p className="mt-1 leading-relaxed opacity-80">A professional AI terminal developed in collaboration with <span className="font-black text-[var(--text-primary)]">ELITEUNIVERSE</span>. Created by <span className="font-black text-[var(--text-primary)]">ABHISHEK GUPTA KANCHARLA</span> for Engineering students.</p>
         </div>
       </footer>
     </div>

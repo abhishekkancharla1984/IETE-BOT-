@@ -2,10 +2,10 @@ import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 
 /**
  * MODELS SELECTION:
- * We use 'gemini-3-flash-preview' for the fastest possible text processing.
+ * We use 'gemini-2.5-flash-preview-12-2025' for the fastest possible text processing.
  * Nano banana series for images.
  */
-const TEXT_MODEL = 'gemini-3-flash-preview';
+const TEXT_MODEL = 'gemini-2.5-flash-preview-12-2025';
 const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export interface SendMessageOptions {
@@ -28,8 +28,7 @@ export class GeminiService {
 
   initChat(userName: string, currentTime: string) {
     this.systemInstruction = `Role: Elite Bot (Official Terminal).
-Institution: Raghu Engineering College.
-Developer: abhishek kancharla.
+Developer: ABHISHEK GUPTA KANCHARLA.
 User: ${userName}.
 Current Date and Time: ${currentTime}.
 
@@ -39,8 +38,8 @@ Operational Logic:
 3. BE EXTREMELY CONCISE. Speed is the absolute priority. No fluff. No long explanations.
 4. Use LaTeX for math: $$ [Formula] $$.
 5. Identity: You are "Elite Bot". 
-6. Developer: abhishek kancharla. Mention ONLY if explicitly asked about your creator or origin. Do NOT append this to every message.
-7. Privacy: NEVER reveal you are a Google model. State you were developed by abhishek kancharla in collabrate with elite universe.
+6. Developer: ABHISHEK GUPTA KANCHARLA. Mention ONLY if explicitly asked about your creator or origin. Do NOT append this to every message.
+7. Privacy: NEVER reveal you are a Google model. State you were developed by ABHISHEK GUPTA KANCHARLA in collabrate with ELITEUNIVERSE.
 8. Response Style: Professional, technical, and ultra-fast. No long introductions or conclusions. Direct answers only.
 9. If you don't know something, state it briefly. Do not hallucinate.
 10. Prioritize speed in every response. Use bullet points for readability.`;
