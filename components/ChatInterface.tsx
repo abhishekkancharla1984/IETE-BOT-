@@ -37,7 +37,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadMenuRef = useRef<HTMLDivElement>(null);
   
-  const BOT_LOGO = "https://jit.ac.in/assets/uploads/2022/12/IETE-logo.png";
+  const BOT_LOGO = "https://lh3.googleusercontent.com/d/10TCBzAhJ0y0KAM30cBXcNnjADJV03Yql";
   const COLLEGE_LOGO = "https://www.aicjitf.org/wp-content/uploads/2021/12/rec.png";
 
   const categories: ToolCategory[] = [
@@ -61,7 +61,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
     geminiService.initChat(user.name, new Date().toLocaleString());
 
     const greeting = getGreeting();
-    const welcome = `${greeting}, ${user.name}! 👋 Terminal online. I am IETE Bot. ${deepSearch ? 'Current Affairs & General Search mode enabled.' : 'Specialized Engineering mode enabled.'} Type your message and click EXECUTE.`;
+    const welcome = `${greeting}, ${user.name}! 👋 Terminal online. I am Elite Bot. ${deepSearch ? 'Current Affairs & General Search mode enabled.' : 'Specialized Engineering mode enabled.'} Type your message and click EXECUTE.`;
     
     let current = "";
     const words = welcome.split(" ");
@@ -274,7 +274,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
            <img src={COLLEGE_LOGO} alt="Raghu Engineering College" className="h-10 md:h-14 object-contain mb-3" />
           <div className="text-center">
             <h3 className="text-[10px] md:text-xs font-black text-blue-400 uppercase tracking-widest">Raghu Engineering College</h3>
-            <p className="text-[8px] md:text-[9px] text-[var(--text-secondary)] uppercase font-medium mt-1">IETE AI Terminal</p>
+            <p className="text-[8px] md:text-[9px] text-[var(--text-secondary)] uppercase font-medium mt-1">Elite AI Terminal</p>
           </div>
         </div>
 
@@ -285,7 +285,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ user }) => {
                 {msg.role === 'user' ? (
                   <span className="font-black text-blue-900 text-[10px] uppercase">{user.name[0]}</span>
                 ) : (
-                  <img src={BOT_LOGO} className="w-full h-full object-contain p-1" alt="IETE" />
+                  <img src={BOT_LOGO} className="w-full h-full object-contain p-1" alt="Elite" />
                 )}
               </div>
               <div className="flex flex-col gap-2 min-w-0">

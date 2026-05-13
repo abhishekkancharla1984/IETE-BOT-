@@ -70,9 +70,9 @@ const App: React.FC = () => {
 
       <footer className="py-4 text-center text-[10px] opacity-60 bg-black/5 backdrop-blur-md border-t border-black/5 z-20">
         <div className="flex flex-col items-center gap-1">
-          <p>© {new Date().getFullYear()} The Institution of Electronics and Telecommunication Engineers (IETE).</p>
+          <p>© {new Date().getFullYear()} Elite Universe Terminal Collaboration.</p>
           <p className="uppercase tracking-widest font-medium text-[var(--text-primary)]">Electronics • Telecommunication • Information Technology</p>
-          <p className="mt-1">Developed by <span className="font-bold">ABHISHEK GUPTA KANCHARLA</span> in collaboration with IETE</p>
+          <p className="mt-1">developed by <span className="font-bold">abhishek kancharla</span> in collabrate with elite universe</p>
         </div>
       </footer>
     </div>

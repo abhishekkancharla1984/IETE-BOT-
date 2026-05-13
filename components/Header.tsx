@@ -10,7 +10,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onReset, showReset, currentTheme, onToggleTheme }) => {
   const [time, setTime] = useState(new Date());
-  const IETE_LOGO = "https://jit.ac.in/assets/uploads/2022/12/IETE-logo.png";
+  const ELITE_LOGO = "https://lh3.googleusercontent.com/d/10TCBzAhJ0y0KAM30cBXcNnjADJV03Yql";
   const RAGHU_LOGO = "https://www.aicjitf.org/wp-content/uploads/2021/12/rec.png";
 
   useEffect(() => {
@@ -51,18 +51,18 @@ const Header: React.FC<HeaderProps> = ({ onReset, showReset, currentTheme, onTog
                 className="w-full h-full object-contain" 
               />
             </div>
-            {/* IETE Logo Second */}
+            {/* Elite Logo Second */}
             <div className="w-8 h-8 md:w-11 md:h-11 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden p-0.5 md:p-1 border border-black/10 relative z-10">
                <img 
-                src={IETE_LOGO} 
-                alt="IETE Logo" 
+                src={ELITE_LOGO} 
+                alt="Elite Logo" 
                 className="w-full h-full object-contain" 
               />
             </div>
           </div>
           <div className="flex flex-col min-w-0">
             <h1 className="text-xs md:text-lg font-bold leading-tight text-[var(--text-primary)] truncate">
-              IETE Bot <span className="sr-only">by ABHISHEK GUPTA KANCHARLA</span>
+              Elite Bot <span className="sr-only">by abhishek kancharla</span>
             </h1>
             <div className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
